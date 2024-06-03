@@ -4,6 +4,7 @@ jupyterlab~=4.1.6
 notebook~=7.1.2
 
 langdb-kernel-lite @ git+https://github.com/langdb/langdb-kernel-lite.git 
+jupyterlab-open-url-parameter==0.3.0
 
 # Python kernel (optional)
 jupyterlite-pyodide-kernel==0.3.1
