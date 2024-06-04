@@ -7,6 +7,31 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+jupyterlite-core = "0.3.0"
+jupyterlab = ">=4.1.6,<4.2.0"
+notebook = ">=7.1.2,<7.2.0"
+langdb-kernel-lite = {git = "https://github.com/langdb/langdb-kernel-lite.git"}
+jupyterlab-open-url-parameter = "0.3.0"
+jupyterlite-pyodide-kernel = "0.3.1"
+jupyterlite-javascript-kernel = "0.3.0"
+jupyterlab-language-pack-fr-fr = "^4.2.post1"
+jupyterlab-language-pack-zh-cn = "^4.2.post1"
+jupyterlite-p5-kernel = "0.1.0"
+jupyterlab-fasta = ">=3.3.0,<4"
+jupyterlab-geojson = ">=3.4.0,<4"
+jupyterlab-night = "^0.4.6"
+jupyterlab-miami-nights = "^0.4.2"
+ipywidgets = ">=8.1.1,<9"
+ipyevents = ">=2.0.1"
+ipympl = ">=0.8.2"
+ipycanvas = ">=0.9.1"
+ipyleaflet = "^0.19.1"
+plotly = ">=5,<6"
+bqplot = "^0.12.43"
+pydantic = "<2"
+pyyaml = "^6.0.1"
+pyyaml-include = "^2.1"
+yaml-include = "^1.0.0"
 
 
 [build-system]

@@ -27,7 +27,7 @@ jupyterlab-geojson>=3.4.0,<4
 # TODO: re-enable after https://github.com/jupyterlab-contrib/jupyterlab-tour/issues/82
 # jupyterlab-tour
 # JupyterLab: dark theme
-jupyterlab-night
+jupyterlab-night==0.4.6
 # JupyterLab: Miami nights theme (optional)
 jupyterlab_miami_nights
 

@@ -1,0 +1,34 @@
+
+
+#menu-panel-wrapper {
+    display: none;
+}
+.lm-Widget.jp-Toolbar.jp-NotebookPanel-toolbar {
+    display: none;
+}
+
+#top-panel-wrapper {
+    display: none;
+}
+
+#main-panel {
+    top: 0px !important;
+    min-height: 100vh;
+}
+
+.jp-WindowedPanel-inner {
+    margin-top: 0px !important;
+}
+
+.jp-WindowedPanel.lm-Widget.jp-Notebook.jp-mod-scrollPastEnd.jp-mod-showHiddenCellsButton.jp-NotebookPanel-notebook.jp-mod-commandMode {
+    top: 0px !important;
+    min-height: 100vh;
+}
+
+.lm-Widget.lm-Menu {
+    display: none;
+}
+
+.lm-Widget.jp-Toolbar.jp-cell-menu.jp-cell-toolbar {
+    display: none;
+}
