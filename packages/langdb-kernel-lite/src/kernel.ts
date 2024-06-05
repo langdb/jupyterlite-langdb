@@ -2,7 +2,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import axios from 'axios';
 import { BaseKernel } from '@jupyterlite/kernel';
 
-const LANGDB_QUERY_URL = 'http://localhost:8080/query';
+const LANGDB_QUERY_URL = 'http://localhost:8081/query';
 /**
  * A kernel that exexutes request against langdb.
  */
@@ -51,7 +51,12 @@ export class LangdbKernel extends BaseKernel {
     console.debug(`Original code: ${code}`);
 
     try {
-      const response = await axios.post(LANGDB_QUERY_URL, { query: code });
+      const token = window.localStorage.getItem('token');
+      const response = await axios.post(LANGDB_QUERY_URL, { query: code }, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+      });
       let status = 'ok';
 
       if (response.status >= 200 && response.status < 300) {

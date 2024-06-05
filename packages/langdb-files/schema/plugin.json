@@ -1,8 +1,14 @@
 {
-  "jupyter.lab.shortcuts": [],
-  "title": "langdb-files",
   "description": "langdb-files settings.",
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false
+  "jupyter.lab.shortcuts": [],
+  "properties": {
+    "token": {
+      "type": "string",
+      "default": "",
+      "description": "The token to use for authentication."
+    }
+  },
+  "additionalProperties": true,
+  "title": "langdb-files",
+  "type": "object"
 }

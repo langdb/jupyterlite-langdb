@@ -15,3 +15,5 @@ http://localhost:8001/notebooks/?path=ldrive:Lorenz.ipynb
 poetry run  pip uninstall -y langdb-kernel-lite langdb-files
 poetry install
 ```
+
+poetry env remove jupyterlite-langdb-4Nr4YLZ7-py3.12 && poetry install && ./build.sh && serve dist -p 8002

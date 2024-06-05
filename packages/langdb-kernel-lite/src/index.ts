@@ -13,7 +13,7 @@ import { LangdbKernel } from './kernel';
 const kernel: JupyterLiteServerPlugin<void> = {
   id: '@jupyterlite/langdb-kernel:kernel',
   autoStart: true,
-  requires: [IKernelSpecs],
+  requires: [IKernelSpecs,],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
     kernelspecs.register({
       spec: {

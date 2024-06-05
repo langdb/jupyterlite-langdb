@@ -6,11 +6,12 @@ import axios from 'axios';
 
 const temp_token = 'eyJraWQiOiJ2cDJRRUZrODNzSWw4WFwvcDd3S2VObnJxOU9DalwvdFJxQ0lXU2k3QldlN3M9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJhOWZhYjViYy0wMGIxLTcwOGQtODQzOS1hM2MyNWViNDRjYmUiLCJjb2duaXRvOmdyb3VwcyI6WyJjb21wYW55XzM2YjMwOTc2LTkyMmYtNDUxOS1iMDg0LTlmYjdiNzk1YjgyMCIsImFwLXNvdXRoZWFzdC0xX1c4TmtNcVBkcV9Hb29nbGUiXSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmFwLXNvdXRoZWFzdC0xLmFtYXpvbmF3cy5jb21cL2FwLXNvdXRoZWFzdC0xX1c4TmtNcVBkcSIsInZlcnNpb24iOjIsImNsaWVudF9pZCI6ImNiNm8xOXN2dWJ1dHR0a25qMTQ4dTJrZTQiLCJvcmlnaW5fanRpIjoiYzM4NzU1NDYtYWU5Yy00ZDBkLWJiYzItZmRjMTlmOTM0N2JiIiwidG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiBvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF1dGhfdGltZSI6MTcxNzU1ODk5NSwiZXhwIjoxNzE3NTgxMTQ0LCJpYXQiOjE3MTc1Nzc1NDQsImp0aSI6ImVkNzI3YThlLTAxMmEtNGEwZi1iMTJiLTkxNWU4YTgyMTUzNSIsInVzZXJuYW1lIjoiZ29vZ2xlXzEwODg0MzQwMzA3MDU3MjQ0MzM0MSJ9.ZCCtjaN1KDLpNI3avL-i8Nb0CoCZRaQQIELJXw1X4RPxgbR9MPodhBP68NkZV-EZmW1mdo7oSMBAgTm22on0Wdd-jtiUT02piCELL0IRbVIZ_zVWMixtnQmcLRyTYLRFwPc0omTJmDqZX-ZAQOsffediRGuBoHfNFBnckRWe1YLUbq9zyxMM1_XZlrc4JPemSH8-ayUL3usWuGuo_nR_j2l6IbdGCSadOynbVC706dnnY9lf3CayxaDsNCKBs5Jo5pEas-uQcA_IoUhWOpurMGDMnUzhqfNvSVmLLyh_eY6xtOG304st7QNv1YdSz6hRfH0D3UrjS5YGwUPZKco5Dw'
 
-async function getFile(app_id: string): Promise<any> {
+async function getFile(app_id: string, token: string | undefined): Promise<any> {
+  console.log(token, temp_token);
   try {
-    const response = await axios.get(`http://localhost:8083/apps/${app_id}/file`, {
+    const response = await axios.get(`http://localhost:8081/apps/${app_id}/file`, {
       headers: {
-        'Authorization': `Bearer ${temp_token}`
+        'Authorization': `Bearer ${token || temp_token}`
       },
       maxBodyLength: Infinity,
     });
@@ -27,10 +28,17 @@ async function getFile(app_id: string): Promise<any> {
  */
 export class LangdbDrive implements Contents.IDrive {
   readonly serverSettings: ServerConnection.ISettings;
+  private token: string | undefined;
 
-  constructor(registry: DocumentRegistry) {
+  constructor(registry: DocumentRegistry, token: string | undefined) {
     this.serverSettings = ServerConnection.makeSettings();
+    this.token = token;
   }
+
+  set_token(token: string | undefined): void {
+    this.token = token;
+  }
+
   /**
    * The name of the drive.
    */
@@ -78,7 +86,7 @@ export class LangdbDrive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     let fetch_path = path.replace('.ipynb', '');
-    const result = await getFile(fetch_path);
+    const result = await getFile(fetch_path, this.token);
 
     // check if result is json object
     let result_string = JSON.stringify(result);
