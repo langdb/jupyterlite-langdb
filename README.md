@@ -8,7 +8,7 @@ npm install -g serve
 serve dist -p 8001
 ```
 
-http://localhost:8001/notebooks&path=ldrive:Lorenz.ipynb
+http://localhost:8001/notebooks/?path=ldrive:Lorenz.ipynb
 
 
 ```bash
