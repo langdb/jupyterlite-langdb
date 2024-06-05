@@ -17,7 +17,6 @@
       "@jupyterlite/notebook-application-extension:logo",
       "@jupyterlab/application-extension:top-bar",
       "@jupyterlab/notebook-extension:trust-status"
-
     ],
     "faviconUrl": "./lab/favicon.ico"
   },

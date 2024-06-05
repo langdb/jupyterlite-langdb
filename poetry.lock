@@ -727,13 +727,13 @@ files = [
 
 [[package]]
 name = "fsspec"
-version = "2024.5.0"
+version = "2024.6.0"
 description = "File-system specification"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fsspec-2024.5.0-py3-none-any.whl", hash = "sha256:e0fdbc446d67e182f49a70b82cf7889028a63588fde6b222521f10937b2b670c"},
-    {file = "fsspec-2024.5.0.tar.gz", hash = "sha256:1d021b0b0f933e3b3029ed808eb400c08ba101ca2de4b3483fbc9ca23fcee94a"},
+    {file = "fsspec-2024.6.0-py3-none-any.whl", hash = "sha256:58d7122eb8a1a46f7f13453187bfea4972d66bf01618d37366521b1998034cee"},
+    {file = "fsspec-2024.6.0.tar.gz", hash = "sha256:f579960a56e6d8038a9efc8f9c77279ec12e6299aa86b0769a7e9c46b94527c2"},
 ]
 
 [package.extras]
@@ -742,6 +742,7 @@ adl = ["adlfs"]
 arrow = ["pyarrow (>=1)"]
 dask = ["dask", "distributed"]
 dev = ["pre-commit", "ruff"]
+doc = ["numpydoc", "sphinx", "sphinx-design", "sphinx-rtd-theme", "yarl"]
 dropbox = ["dropbox", "dropboxdrivefs", "requests"]
 full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
 fuse = ["fusepy"]
@@ -1323,79 +1324,6 @@ test = ["coverage", "pytest (>=7.0)", "pytest-check-links (>=0.7)", "pytest-cons
 upgrade-extension = ["copier (>=8.0,<9.0)", "jinja2-time (<0.3)", "pydantic (<2.0)", "pyyaml-include (<2.0)", "tomli-w (<2.0)"]
 
 [[package]]
-name = "jupyterlab-fasta"
-version = "3.3.0"
-description = "Fasta renderer for JupyterLab"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "jupyterlab_fasta-3.3.0-py3-none-any.whl", hash = "sha256:801d9e3d02e63d9efa964e0f5a1a2dfd22996b89aac72462d54d45b1a4256de1"},
-    {file = "jupyterlab_fasta-3.3.0.tar.gz", hash = "sha256:7597c7b735966481db83c3156ac3d22105a0fade3b3686eb7433fb64c013cb5a"},
-]
-
-[[package]]
-name = "jupyterlab-geojson"
-version = "3.4.0"
-description = "GeoJSON renderer for JupyterLab"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "jupyterlab_geojson-3.4.0-py3-none-any.whl", hash = "sha256:56d9bed9253d0a3b4c6e5ae8ac0685039bfb43775cd356e4979bdf147e89dfc5"},
-    {file = "jupyterlab_geojson-3.4.0.tar.gz", hash = "sha256:cc7f6015f75f7816240402880134cd7174af64fbef010b1556071729f98a291f"},
-]
-
-[[package]]
-name = "jupyterlab-language-pack-fr-fr"
-version = "4.2.post1"
-description = "JupyterLab French (France) Language Pack"
-optional = false
-python-versions = "*"
-files = [
-    {file = "jupyterlab_language_pack_fr_fr-4.2.post1-py2.py3-none-any.whl", hash = "sha256:23e2575034450b1c1c75750e4d73cd25d031cab1f853f037ce826a8273820e76"},
-    {file = "jupyterlab_language_pack_fr_fr-4.2.post1.tar.gz", hash = "sha256:5d2ed69f2a4dd189ac4c998f99d795b1b192ce5ad2d89850008931b35878d083"},
-]
-
-[[package]]
-name = "jupyterlab-language-pack-zh-cn"
-version = "4.2.post1"
-description = "JupyterLab Chinese (Simplified, China) Language Pack"
-optional = false
-python-versions = "*"
-files = [
-    {file = "jupyterlab_language_pack_zh_cn-4.2.post1-py2.py3-none-any.whl", hash = "sha256:606865da382b96816c20baed54f20a03f8344373c60f85dc6903302689f1006f"},
-    {file = "jupyterlab_language_pack_zh_cn-4.2.post1.tar.gz", hash = "sha256:ea2e44f4879ca6b9b995d402815a25e514f0e3dec04cf28a5e812bc67b99387a"},
-]
-
-[[package]]
-name = "jupyterlab-miami-nights"
-version = "0.4.2"
-description = "A glowing 80s theme based on Synthwave '84 and  JupyterLab's Neon Night theme by yeebc"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "jupyterlab_miami_nights-0.4.2-py3-none-any.whl", hash = "sha256:6ef0350e6ca867f35d4ae92553d4141067e2bb6ecbb7641e8fbd4ce474a2fc9d"},
-    {file = "jupyterlab_miami_nights-0.4.2.tar.gz", hash = "sha256:383f427cd51765dab352376e48132b2cf600bb4ff6537542de71e070d143118d"},
-]
-
-[package.dependencies]
-jupyterlab = ">=4,<5"
-
-[package.extras]
-develop = ["black (>=23)", "check-manifest", "pytest", "pytest-cov", "ruff"]
-test = ["pytest", "pytest-cov"]
-
-[[package]]
-name = "jupyterlab-night"
-version = "0.4.6"
-description = "Dark theme for JupyterLab"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "jupyterlab-night-0.4.6.tar.gz", hash = "sha256:1461f67c2218a51632721722bb5ffc29b3b1aaacbe50fbe32f41a7d842b356a9"},
-    {file = "jupyterlab_night-0.4.6-py3-none-any.whl", hash = "sha256:ec7577081cc59c1a88ce7838606c265ffef51555028e7a4372d63a83223d495a"},
-]
-
-[[package]]
 name = "jupyterlab-open-url-parameter"
 version = "0.3.0"
 description = "JupyterLab extension to open files passed via a URL parameter"
@@ -1487,17 +1415,6 @@ python-versions = ">=3.8"
 files = [
     {file = "jupyterlite_javascript_kernel-0.3.0-py3-none-any.whl", hash = "sha256:7753c172d3c8bd50d7e7c05d1b667c3fa5566f90d38bf1bdd160f9752e1746b7"},
     {file = "jupyterlite_javascript_kernel-0.3.0.tar.gz", hash = "sha256:39870efb4cdfe669b99552b4ad21a82f575691e4fdaf77b33bef04ec230889ff"},
-]
-
-[[package]]
-name = "jupyterlite-p5-kernel"
-version = "0.1.0"
-description = ""
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "jupyterlite_p5_kernel-0.1.0-py3-none-any.whl", hash = "sha256:82281dc6d1c172c303454341310509fd8a5051169ad51b9021c27a291c7c835e"},
-    {file = "jupyterlite_p5_kernel-0.1.0.tar.gz", hash = "sha256:d5e0054d5a009d3ade39425ed759117190c76a08c4decde47f150bb127200f67"},
 ]
 
 [[package]]
@@ -1635,19 +1552,30 @@ files = [
 ]
 
 [[package]]
+name = "langdb_files"
+version = "0.1.0"
+description = "Langdb Files extension"
+optional = false
+python-versions = ">=3.8"
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "packages/langdb-files"
+
+[[package]]
 name = "langdb_kernel_lite"
 version = "0.1.0"
 description = "Jupyter Lite kernel for LangDB"
 optional = false
 python-versions = ">=3.8"
 files = []
-develop = false
+develop = true
 
 [package.source]
-type = "git"
-url = "https://github.com/langdb/langdb-kernel-lite.git"
-reference = "HEAD"
-resolved_reference = "29fb98bd03b97aee7fdb531e3f836d47ecad8ba8"
+type = "directory"
+url = "packages/langdb-kernel-lite"
 
 [[package]]
 name = "markupsafe"
@@ -2251,13 +2179,13 @@ twisted = ["twisted"]
 
 [[package]]
 name = "prompt-toolkit"
-version = "3.0.45"
+version = "3.0.46"
 description = "Library for building powerful interactive command lines in Python"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "prompt_toolkit-3.0.45-py3-none-any.whl", hash = "sha256:a29b89160e494e3ea8622b09fa5897610b437884dcdcd054fdc1308883326c2a"},
-    {file = "prompt_toolkit-3.0.45.tar.gz", hash = "sha256:07c60ee4ab7b7e90824b61afa840c8f5aad2d46b3e2e10acc33d8ecc94a49089"},
+    {file = "prompt_toolkit-3.0.46-py3-none-any.whl", hash = "sha256:45abe60a8300f3c618b23c16c4bb98c6fc80af8ce8b17c7ae92db48db3ee63c1"},
+    {file = "prompt_toolkit-3.0.46.tar.gz", hash = "sha256:869c50d682152336e23c4db7f74667639b5047494202ffe7670817053fd57795"},
 ]
 
 [package.dependencies]
@@ -3163,20 +3091,20 @@ files = [
 
 [[package]]
 name = "zipp"
-version = "3.19.1"
+version = "3.19.2"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "zipp-3.19.1-py3-none-any.whl", hash = "sha256:2828e64edb5386ea6a52e7ba7cdb17bb30a73a858f5eb6eb93d8d36f5ea26091"},
-    {file = "zipp-3.19.1.tar.gz", hash = "sha256:35427f6d5594f4acf82d25541438348c26736fa9b3afa2754bcd63cdb99d8e8f"},
+    {file = "zipp-3.19.2-py3-none-any.whl", hash = "sha256:f091755f667055f2d02b32c53771a7a6c8b47e1fdbc4b72a8b9072b3eef8015c"},
+    {file = "zipp-3.19.2.tar.gz", hash = "sha256:bf1dcf6450f873a13e952a29504887c89e6de7506209e5b1bcc3460135d4de19"},
 ]
 
 [package.extras]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
+test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "2ac317e20326a351dfd631839168971537ffb11aef2218ad550e090849e79f7e"
+content-hash = "5e021dcaef7e6d37031a95d0d3fe5c6b76148017659c41cb7e2578da6a3f5a85"
