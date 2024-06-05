@@ -16,7 +16,7 @@ export class LangdbDrive implements Contents.IDrive {
    * The name of the drive.
    */
   get name(): string {
-    return "'LangdbDrive'";
+    return 'ldrive';
   }
 
   /**
@@ -58,6 +58,7 @@ export class LangdbDrive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     console.log('GETTING FILE', options);
+    console.log('GETTING FILE', path);
 
     const contents: Contents.IModel = {
       type: 'file',

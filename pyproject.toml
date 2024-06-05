@@ -12,7 +12,6 @@ jupyterlab = ">=4.1.6,<4.2.0"
 notebook = ">=7.1.2,<7.2.0"
 langdb-kernel-lite = { path = "./packages/langdb-kernel-lite", develop = true }
 langdb-files = { path = "./packages/langdb-files", develop = true }
-jupyterlab-open-url-parameter = "0.3.0"
 jupyterlite-pyodide-kernel = "0.3.1"
 jupyterlite-javascript-kernel = "0.3.0"
 ipywidgets = ">=8.1.1,<9"
