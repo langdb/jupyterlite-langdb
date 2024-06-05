@@ -3,14 +3,46 @@ import { ISignal, Signal } from '@lumino/signaling';
 import IDrive = Contents.IDrive;
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import axios from 'axios';
+import { AuthResponse } from '.';
 
-async function getFile(app_id: string, token: string | undefined): Promise<any> {
+const LANGDB_API_URL = 'https://api.dev.langdb.ai';
+
+async function getFile(
+  appId: string,
+  auth: AuthResponse | undefined
+): Promise<any> {
   try {
-    const response = await axios.get(`http://localhost:8081/apps/${app_id}/file`, {
+    const apiUrl = auth?.apiUrl || LANGDB_API_URL;
+    const response = await axios.get(`${apiUrl}/apps/${appId}/file`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${auth?.token}`
       },
-      maxBodyLength: Infinity,
+      maxBodyLength: Infinity
+    });
+    // get response data as json
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching blob:', error);
+    throw error;
+  }
+}
+
+async function saveFile(
+  appId: string,
+  auth: AuthResponse | undefined,
+  content: any
+): Promise<any> {
+  try {
+    const apiUrl = auth?.apiUrl || LANGDB_API_URL;
+    const blob = new Blob([content], { type: 'application/json' });
+    const formData = new FormData();
+    formData.append('file', blob, 'file.ipynb');
+    const response = await axios.put(`${apiUrl}/apps/${appId}`, {
+      headers: {
+        Authorization: `Bearer ${auth?.token}`,
+        'Content-Type': 'multipart/form-data'
+      },
+      maxBodyLength: Infinity
     });
     // get response data as json
     return response.data;
@@ -25,15 +57,15 @@ async function getFile(app_id: string, token: string | undefined): Promise<any> 
  */
 export class LangdbDrive implements Contents.IDrive {
   readonly serverSettings: ServerConnection.ISettings;
-  private token: string | undefined;
+  private auth: AuthResponse | undefined;
 
-  constructor(registry: DocumentRegistry, token: string | undefined) {
+  constructor(registry: DocumentRegistry, auth: AuthResponse | undefined) {
     this.serverSettings = ServerConnection.makeSettings();
-    this.token = token;
+    this.auth = auth;
   }
 
-  set_token(token: string | undefined): void {
-    this.token = token;
+  setAuth(auth: AuthResponse): void {
+    this.auth = auth;
   }
 
   /**
@@ -82,12 +114,12 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    let fetch_path = path.replace('.ipynb', '');
-    const result = await getFile(fetch_path, this.token);
+    const appId = path.replace('.ipynb', '');
+    const result = await getFile(appId, this.auth);
 
     // check if result is json object
-    let result_string = JSON.stringify(result);
-    let display_content = JSON.parse(result_string)
+    const result_string = JSON.stringify(result);
+    const display_content = JSON.parse(result_string);
     const contents: Contents.IModel = {
       type: 'notebook',
       format: 'json',
@@ -98,7 +130,7 @@ export class LangdbDrive implements Contents.IDrive {
       writable: true,
       last_modified: '',
       size: result_string.length,
-      mimetype: 'application/json',
+      mimetype: 'application/json'
     };
 
     return Promise.resolve(contents);
@@ -172,7 +204,15 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options: Partial<Contents.IModel>
   ): Promise<Contents.IModel> {
-    throw Error('Not yet implemented save');
+    const appId = path.replace('.ipynb', '');
+    try {
+      const response = await saveFile(appId, this.auth, options.content);
+      console.log(response);
+      return Promise.resolve(options as Contents.IModel);
+    } catch (e: any) {
+      console.error(e);
+      return Promise.reject(e);
+    }
   }
 
   /**
