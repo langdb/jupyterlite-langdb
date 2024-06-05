@@ -2,6 +2,25 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import IDrive = Contents.IDrive;
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import axios from 'axios';
+
+const temp_token = 'eyJraWQiOiJ2cDJRRUZrODNzSWw4WFwvcDd3S2VObnJxOU9DalwvdFJxQ0lXU2k3QldlN3M9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJhOWZhYjViYy0wMGIxLTcwOGQtODQzOS1hM2MyNWViNDRjYmUiLCJjb2duaXRvOmdyb3VwcyI6WyJjb21wYW55XzM2YjMwOTc2LTkyMmYtNDUxOS1iMDg0LTlmYjdiNzk1YjgyMCIsImFwLXNvdXRoZWFzdC0xX1c4TmtNcVBkcV9Hb29nbGUiXSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmFwLXNvdXRoZWFzdC0xLmFtYXpvbmF3cy5jb21cL2FwLXNvdXRoZWFzdC0xX1c4TmtNcVBkcSIsInZlcnNpb24iOjIsImNsaWVudF9pZCI6ImNiNm8xOXN2dWJ1dHR0a25qMTQ4dTJrZTQiLCJvcmlnaW5fanRpIjoiYzM4NzU1NDYtYWU5Yy00ZDBkLWJiYzItZmRjMTlmOTM0N2JiIiwidG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiBvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF1dGhfdGltZSI6MTcxNzU1ODk5NSwiZXhwIjoxNzE3NTgxMTQ0LCJpYXQiOjE3MTc1Nzc1NDQsImp0aSI6ImVkNzI3YThlLTAxMmEtNGEwZi1iMTJiLTkxNWU4YTgyMTUzNSIsInVzZXJuYW1lIjoiZ29vZ2xlXzEwODg0MzQwMzA3MDU3MjQ0MzM0MSJ9.ZCCtjaN1KDLpNI3avL-i8Nb0CoCZRaQQIELJXw1X4RPxgbR9MPodhBP68NkZV-EZmW1mdo7oSMBAgTm22on0Wdd-jtiUT02piCELL0IRbVIZ_zVWMixtnQmcLRyTYLRFwPc0omTJmDqZX-ZAQOsffediRGuBoHfNFBnckRWe1YLUbq9zyxMM1_XZlrc4JPemSH8-ayUL3usWuGuo_nR_j2l6IbdGCSadOynbVC706dnnY9lf3CayxaDsNCKBs5Jo5pEas-uQcA_IoUhWOpurMGDMnUzhqfNvSVmLLyh_eY6xtOG304st7QNv1YdSz6hRfH0D3UrjS5YGwUPZKco5Dw'
+
+async function getFile(app_id: string): Promise<any> {
+  try {
+    const response = await axios.get(`http://localhost:8083/apps/${app_id}/file`, {
+      headers: {
+        'Authorization': `Bearer ${temp_token}`
+      },
+      maxBodyLength: Infinity,
+    });
+    // get response data as json
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching blob:', error);
+    throw error;
+  }
+}
 
 /**
  * A Contents.IDrive implementation for s3-api-compatible object storage.
@@ -53,23 +72,28 @@ export class LangdbDrive implements Contents.IDrive {
    *
    * @returns A promise which resolves with the file content.
    */
+
   async get(
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    console.log('GETTING FILE', options);
-    console.log('GETTING FILE', path);
+    let fetch_path = path.replace('.ipynb', '');
+    const result = await getFile(fetch_path);
 
+    // check if result is json object
+    let result_string = JSON.stringify(result);
+    let display_content = JSON.parse(result_string)
     const contents: Contents.IModel = {
-      type: 'file',
-      path,
-      name: '',
-      format: 'text',
-      content: 'ABC',
+      type: 'notebook',
+      format: 'json',
+      path: `${path}.ipynb`,
+      name: `${path}.ipynb`,
+      content: display_content,
       created: '',
       writable: true,
       last_modified: '',
-      mimetype: 'file'
+      size: result_string.length,
+      mimetype: 'application/json',
     };
 
     return Promise.resolve(contents);
@@ -86,6 +110,7 @@ export class LangdbDrive implements Contents.IDrive {
    * path if necessary.
    */
   async getDownloadUrl(path: string): Promise<string> {
+    console.log('=== GETTING DOWNLOAD URL', path);
     throw Error('Not yet implemented');
   }
 
@@ -168,7 +193,12 @@ export class LangdbDrive implements Contents.IDrive {
    *   checkpoint is created.
    */
   async createCheckpoint(path: string): Promise<Contents.ICheckpointModel> {
-    throw new Error('Method not implemented.');
+    console.log('===== Creating checkpoint', path);
+    const emptyCheckpoint: Contents.ICheckpointModel = {
+      id: '',
+      last_modified: ''
+    };
+    return Promise.resolve(emptyCheckpoint);
   }
 
   /**
