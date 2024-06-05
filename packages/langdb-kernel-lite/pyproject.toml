@@ -1,0 +1,65 @@
+[build-system]
+requires = [
+  "hatchling>=1.5.0",
+  "jupyterlab>=4.1.1,<4.2",
+  "hatch-nodejs-version>=0.3.2",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "langdb_kernel_lite"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dynamic = ["version", "description", "authors", "urls", "keywords"]
+
+[tool.hatch.version]
+source = "nodejs"
+
+[tool.hatch.metadata.hooks.nodejs]
+fields = ["description", "authors", "urls"]
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["langdb_kernel_lite/labextension"]
+exclude = [".github", "binder"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"langdb_kernel_lite/labextension" = "share/jupyter/labextensions/langdb-kernel-lite"
+"install.json" = "share/jupyter/labextensions/langdb-kernel-lite/install.json"
+
+[tool.hatch.build.hooks.version]
+path = "langdb_kernel_lite/_version.py"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder>=0.5"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+  "langdb_kernel_lite/labextension/static/style.js",
+  "langdb_kernel_lite/labextension/package.json",
+]
+skip-if-exists = ["langdb_kernel_lite/labextension/static/style.js"]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+build_cmd = "build:prod"
+npm = ["yarn"]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "install:extension"
+npm = ["yarn"]
+source_dir = "src"
+build_dir = "langdb_kernel_lite/labextension"
+
+[tool.jupyter-releaser.options]
+version_cmd = "python scripts/bump-version.py"
+
+[tool.jupyter-releaser.hooks]
+before-bump-version = ["python -m pip install 'jupyterlab>=4.1.1,<4.2'", "yarn"]
+before-build-npm = [
+  "python -m pip install 'jupyterlab>=4.1.1,<4.2'",
+  "yarn clean",
+  "yarn build:prod",
+]
+before-build-python = ["yarn clean"]
+
+[tool.check-wheel-contents]
+ignore = ["W002"]

@@ -1,0 +1,88 @@
+{
+  "name": "langdb-kernel-lite",
+  "version": "0.1.0",
+  "description": "Jupyter Lite kernel for LangDB",
+  "license": "BSD-3-Clause",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "scripts": {
+    "build": "yarn run build:lib && yarn run build:labextension:dev",
+    "build:prod": "yarn run clean && yarn run build:lib && yarn run build:labextension",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build:lib": "tsc",
+    "clean": "yarn run clean:lib",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:labextension": "rimraf langdb_kernel_lite/labextension",
+    "clean:all": "yarn run clean:lib && yarn run clean:labextension",
+    "eslint": "eslint . --ext .ts,.tsx --fix",
+    "eslint:check": "eslint . --ext .ts,.tsx",
+    "install:extension": "yarn run build",
+    "watch": "run-p watch:src watch:labextension",
+    "watch:src": "tsc -w",
+    "watch:labextension": "jupyter labextension watch ."
+  },
+  "dependencies": {
+    "@jupyterlab/services": "^7.2.1",
+    "@jupyterlite/kernel": "^0.3.0",
+    "@jupyterlite/server": "^0.3.0",
+    "axios": "^1.7.2"
+  },
+  "resolutions": {
+    "@jupyterlab/services/ws": "8.12.0",
+    "@types/react": "^18.0.26",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^4.2.1",
+    "@types/react": "^18.3.3",
+    "@typescript-eslint/eslint-plugin": "~6.13.2",
+    "@typescript-eslint/parser": "~6.13.2",
+    "eslint": "~8.55.0",
+    "eslint-config-prettier": "~9.1.0",
+    "eslint-plugin-jest": "~27.6.0",
+    "eslint-plugin-prettier": "~5.0.1",
+    "eslint-plugin-react": "~7.33.2",
+    "prettier": "~3.0.0",
+    "react": "^18.3.1",
+    "rimraf": "~5.0.5",
+    "typescript": "~5.1.6"
+  },
+  "sideEffects": [
+    "style/*.css",
+    "style/index.js"
+  ],
+  "styleModule": "style/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "outputDir": "langdb_kernel_lite/labextension",
+    "sharedPackages": {
+      "@jupyterlite/kernel": {
+        "bundled": false,
+        "singleton": true
+      }
+    }
+  },
+  "jupyterlite": {
+    "liteExtension": true
+  },
+  "jupyter-releaser": {
+    "skip": [
+      "check-links"
+    ],
+    "hooks": {
+      "before-build-npm": [
+        "python -m pip install jupyterlab~=3.1",
+        "yarn"
+      ]
+    }
+  }
+}

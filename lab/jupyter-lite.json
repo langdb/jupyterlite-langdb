@@ -1,0 +1,13 @@
+{
+  "jupyter-lite-schema-version": 0,
+  "jupyter-config-data": {
+    "appUrl": "/lab",
+    "settingsUrl": "../build/schemas",
+    "themesUrl": "./build/themes",
+    "defaultKernelName": "langdb",
+    "contentsStorageDrivers": [
+      "langdb-files"
+    ]
+  },
+  "defaultKernelName": "langdb"
+}

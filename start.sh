@@ -1,2 +1,2 @@
 sh build.sh
-jupyter lite serve --output-dir dist
+serve dist -p 8001

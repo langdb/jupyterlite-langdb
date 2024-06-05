@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.3.1
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: vivek@langdb.ai
+author_name: Vivek
+has_binder: true
+has_settings: true
+kind: frontend
+labextension_name: langdb-files
+project_short_description: Langdb Files extension
+python_name: langdb_files
+repository: https://github.com/langdb/langdb-files
+test: false
+
