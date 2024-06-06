@@ -1,7 +1,6 @@
 import { KernelMessage } from '@jupyterlab/services';
 import axios from 'axios';
-import { BaseKernel } from '@jupyterlite/kernel';
-
+import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
@@ -31,6 +30,16 @@ function requestSession(): Promise<AuthResponse> {
  * A kernel that exexutes request against langdb.
  */
 export class LangdbKernel extends BaseKernel {
+  private storedJson: object | undefined = undefined;
+  private kernelOptions: any;
+  private kernelspecs: IKernelSpecs;
+  private pythonKernel: IKernel | undefined;
+
+  constructor(options: any, kernelspecs: IKernelSpecs) {
+    super(options);
+    this.kernelOptions = options;
+    this.kernelspecs = kernelspecs;
+  }
   /**
    * Handle a kernel_info_request message
    */
@@ -62,13 +71,102 @@ export class LangdbKernel extends BaseKernel {
     return content;
   }
 
+  async executeRequest(
+    content: KernelMessage.IExecuteRequestMsg['content']
+  ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
+    let code = content.code.trim();
+
+    if (code.startsWith('%python')) {
+      await this.handleRunPython(code);
+      return {
+        status: 'ok',
+        execution_count: this.executionCount,
+        user_expressions: {}
+      };
+    } else {
+      const storeJson = code.startsWith('%storejson');
+      code = code.replace('%storejson', '').trim();
+      // Handle SQL execution (add your SQL execution logic here)
+      return this.executeLocalRequest({ code }, storeJson);
+    }
+  }
+  private async getPythonKernel(): Promise<IKernel> {
+    if (this.pythonKernel) {
+      return this.pythonKernel;
+    }
+    const factory = this.kernelspecs.factories.get('python');
+    if (!factory) {
+      throw new Error('Kernel not found: python');
+    }
+    const kernel = await factory({
+      ...this.kernelOptions,
+      id: 'python',
+      sendMessage: (msg: KernelMessage.IMessage) => {
+        if (KernelMessage.isExecuteResultMsg(msg)) {
+          this.publishExecuteResult(msg.content);
+        } else if (KernelMessage.isErrorMsg(msg)) {
+          this.publishExecuteError(msg.content);
+        } else if (KernelMessage.isStreamMsg(msg)) {
+          this.stream(msg.content);
+        } else {
+          console.debug('ignoring msg', msg);
+        }
+
+        this.kernelOptions.sendMessage(msg);
+      },
+      name: 'python',
+      location: ''
+    });
+    this.pythonKernel = kernel;
+    return kernel;
+  }
+
+  private async handleRunPython(code: string): Promise<void> {
+    const pythonCode = code.replace('%python', '').trim();
+    let completePythonCode = pythonCode;
+    if (this.storedJson) {
+      completePythonCode = `import json\nimport pandas as pd\njson_data = ${this.storedJson}\ndf = pd.DataFrame(json_data)\n${pythonCode}`;
+    }
+    try {
+      const kernel = await this.getPythonKernel();
+      await this.executeInPythonKernel(kernel, completePythonCode);
+    } catch (e: any) {
+      const error = {
+        ename: e.name,
+        evalue: e.value,
+        traceback: []
+      };
+      this.publishExecuteError(error);
+    }
+  }
+  private async executeInPythonKernel(
+    kernel: IKernel,
+    code: string
+  ): Promise<void> {
+    if (!this.parentHeader) {
+      throw new Error('parent header is exepe');
+    }
+    const message =
+      KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>({
+        ...this.parentHeader,
+        msgType: 'execute_request',
+        channel: 'shell',
+        session: this.parentHeader.session,
+        content: { code },
+        parentHeader: this.parentHeader
+      });
+
+    await kernel.handleMessage(message);
+  }
+
   /**
    * Handle an `execute_request` message
    *
    * @param msg The parent message.
    */
-  async executeRequest(
-    content: KernelMessage.IExecuteRequestMsg['content']
+  async executeLocalRequest(
+    content: KernelMessage.IExecuteRequestMsg['content'],
+    storeJson: boolean
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
     console.debug('Starting execution of code');
@@ -113,7 +211,11 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         };
       }
+
       const jsonResponse = response.data;
+      if (storeJson) {
+        this.storedJson = jsonResponse;
+      }
 
       if (code.toLowerCase().startsWith('chat')) {
         console.debug(JSON.stringify(jsonResponse));

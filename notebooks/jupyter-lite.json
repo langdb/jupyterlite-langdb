@@ -3,8 +3,13 @@
   "jupyter-config-data": {
     "appName": "Langdb JupyterLite",
     "defaultKernelName": "langdb",
+    "enableMemoryStorage": true,
     "contentsStorageDrivers": [
-      "langdb-files"
+      "langdb-files",
+      "memoryStorageDriver"
+    ],
+    "settingsStorageDrivers": [
+      "memoryStorageDriver"
     ],
     "disabledExtensions": [
       "@jupyterlab/application-extension:logo",
