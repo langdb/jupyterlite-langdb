@@ -28,42 +28,18 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const { serviceManager } = app;
 
     if (window.self !== window.top) {
-      // The application is loaded as an iframe
-      window.parent.postMessage({ type: 'AuthRequest' }, '*');
-      window.addEventListener('message', event => {
-        if (event.data.type === 'AuthResponse') {
-          settingRegistry
-            .set('langdb-files:plugin', 'auth', event.data.msg)
-            .then(() => {
-              console.log('Token saved!');
-            });
-        }
-      });
-    } else {
       // The application is not loaded as an iframe
       // Add a widget to get login
       // Assuming you have a function createLoginWidget that returns a widget for login
       const loginWidget = createLoginWidget();
-      app.shell.add(loginWidget, 'main');
+      app.shell.add(loginWidget, 'login');
     }
 
-    settingRegistry.load('langdb-files:plugin').then(settings => {
-      const auth = settings.get('auth').composite as AuthResponse | undefined;
+    const drive = new LangdbDrive(app.docRegistry);
+    manager.services.contents.addDrive(drive);
+    serviceManager.contents.addDrive(drive);
 
-      const drive = new LangdbDrive(app.docRegistry, auth);
-      manager.services.contents.addDrive(drive);
-      serviceManager.contents.addDrive(drive);
-
-      console.log('Drive "ldrive" attached');
-
-      settings.changed.connect((sender, key) => {
-        const auth = settings.get('auth').composite as AuthResponse | undefined;
-        if (auth) {
-          drive.setAuth(auth);
-          window.localStorage.setItem('auth', JSON.stringify(auth));
-        }
-      });
-    });
+    console.log('Drive "ldrive" attached');
   }
 };
 
