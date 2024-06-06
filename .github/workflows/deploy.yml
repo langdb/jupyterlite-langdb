@@ -2,8 +2,9 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
-    
+    branches:
+      - main
+      - deploy
 
 jobs:
   build:
@@ -21,7 +22,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
-        
+
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
@@ -38,7 +39,7 @@ jobs:
         run: |
           poetry run  pip uninstall -y langdb-kernel-lite langdb-files
           poetry install --no-interaction
-      
+
       - name: Build the JupyterLite site
         run: |
           cp README.md content
@@ -63,3 +64,16 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Deploy jupyterlite to bucket
+        run: aws s3 sync ./dist s3://jupyterlite.dev.langdb.ai
+
+      - name: Invalidate pulse cloudfront
+        run: aws cloudfront create-invalidation --distribution-id E23ZXXMRGDAGLG --paths "/notebook/*"
