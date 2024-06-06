@@ -27,7 +27,7 @@ const kernel: JupyterLiteServerPlugin<void> = {
         }
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        return new LangdbKernel(options);
+        return new LangdbKernel(options, kernelspecs);
       }
     });
   }
