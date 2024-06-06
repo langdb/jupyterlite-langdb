@@ -54,9 +54,9 @@ jobs:
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deploy'
-    permissions:
-      pages: write
-      id-token: write
+#    permissions:
+#      pages: write
+#      id-token: write
 
     environment:
       name: github-pages
