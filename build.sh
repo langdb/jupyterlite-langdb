@@ -7,7 +7,7 @@ rm -rf dist
 rm -f .jupyterlite.doit.db
 
 # Run jupyter lite build with output directory as dist
-jupyter lite build --output-dir dist
+poetry run jupyter lite build --output-dir dist
 
 echo "==== Built successfully"
 # Define the source and destination directories
