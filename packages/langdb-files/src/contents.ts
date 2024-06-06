@@ -50,10 +50,12 @@ async function saveFile(appId: string, content: any): Promise<any> {
   try {
     const auth = await requestSession();
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
-    const blob = new Blob([content], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(content)], {
+      type: 'application/json'
+    });
     const formData = new FormData();
     formData.append('file', blob, 'file.ipynb');
-    const response = await axios.put(`${apiUrl}/apps/${appId}`, {
+    const response = await axios.put(`${apiUrl}/apps/${appId}`, formData, {
       headers: {
         Authorization: `Bearer ${auth?.token}`,
         'Content-Type': 'multipart/form-data'
