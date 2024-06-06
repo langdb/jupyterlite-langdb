@@ -174,6 +174,11 @@ export class LangdbKernel extends BaseKernel {
       } as KernelMessage.IExecuteReplyMsg['content'];
     } catch (error: any) {
       console.error('An error occurred', error);
+      this.publishExecuteError({
+        ename: error.name,
+        evalue: error.message,
+        traceback: []
+      });
       return {
         status: 'error',
         execution_count: this.executionCount,
