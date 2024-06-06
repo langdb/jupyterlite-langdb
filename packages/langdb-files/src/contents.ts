@@ -124,6 +124,26 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    if (path.startsWith('https:/')) {
+      const response = await axios.get(path);
+      // get last part of path
+      const parts = path.split('/');
+      const name = parts[parts.length - 1];
+      const contents: Contents.IModel = {
+        type: 'notebook',
+        format: 'json',
+        path: name,
+        name: name,
+        content: response.data,
+        created: '',
+        writable: true,
+        last_modified: '',
+        size: response.data.length,
+        mimetype: 'application/json'
+      };
+      return Promise.resolve(contents);
+    }
+
     const appId = path.replace('.ipynb', '');
     const result = await getFile(appId);
 
