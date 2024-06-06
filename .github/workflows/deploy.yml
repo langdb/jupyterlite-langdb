@@ -76,4 +76,4 @@ jobs:
         run: aws s3 sync ./dist s3://jupyterlite.dev.langdb.ai
 
       - name: Invalidate pulse cloudfront
-        run: aws cloudfront create-invalidation --distribution-id E23ZXXMRGDAGLG --paths "/notebook/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DISTRIBUTION_ID }} --paths "/notebook/*"
