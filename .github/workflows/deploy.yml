@@ -2,7 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: main
+    branches: [main,chore/css-to-hide-unused-component- ]
+    
 
 jobs:
   build:
