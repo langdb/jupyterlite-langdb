@@ -54,16 +54,20 @@ jobs:
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/deploy'
-#    permissions:
-#      pages: write
-#      id-token: write
+    permissions:
+      pages: write
+      id-token: write
 
-#    environment:
-#      name: github-pages
-#      url: ${{ steps.deployment.outputs.page_url }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-latest
     steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -76,7 +80,3 @@ jobs:
 
       - name: Invalidate pulse cloudfront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DISTRIBUTION_ID }} --paths "/notebook/*"
-
-#      - name: Deploy to GitHub Pages
-#        id: deployment
-#        uses: actions/deploy-pages@v4
