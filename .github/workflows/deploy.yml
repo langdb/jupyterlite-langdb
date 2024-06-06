@@ -2,7 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: main
+    branches: [main]
+    
 
 jobs:
   build:
@@ -29,7 +30,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('**/langdb-files/yarn.lock') }}
       #----------------------------------------------
       # install dependencies
       #----------------------------------------------
