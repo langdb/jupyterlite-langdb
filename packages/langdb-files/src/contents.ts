@@ -13,13 +13,13 @@ export type AuthResponse = {
 function requestSession(): Promise<AuthResponse> {
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
-      if (event.data.type === 'session') {
+      if (event.data.type === 'AuthResponse') {
         window.removeEventListener('message', messageHandler);
         resolve(event.data.msg);
       }
     };
     window.addEventListener('message', messageHandler);
-    window.parent.postMessage('AuthRequest', '*');
+    window.parent.postMessage({ type: 'AuthRequest' }, '*');
 
     setTimeout(() => {
       window.removeEventListener('message', messageHandler);
