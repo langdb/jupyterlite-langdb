@@ -64,11 +64,11 @@ jobs:
 
       - name: Deploy jupyterlite to bucket
         if: github.ref == 'refs/heads/main'
-        run: aws s3 sync ./dist s3://jupyterlite.dev.langdb.ai
+        run: aws s3 sync ./dist s3://app.dev.langdb.ai/jupyterlite
 
       - name: Invalidate pulse cloudfront
         if: github.ref == 'refs/heads/main'
-        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DISTRIBUTION_ID }} --paths "/notebook/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.DISTRIBUTION_ID }} --paths "/jupyterlite/*"
 
   deploy:
     needs: build
