@@ -3,15 +3,34 @@ import { ISignal, Signal } from '@lumino/signaling';
 import IDrive = Contents.IDrive;
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import axios from 'axios';
-import { AuthResponse } from '.';
 
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
+export type AuthResponse = {
+  token: string;
+  apiUrl: string;
+};
 
-async function getFile(
-  appId: string,
-  auth: AuthResponse | undefined
-): Promise<any> {
+function requestSession(): Promise<AuthResponse> {
+  return new Promise((resolve, reject) => {
+    const messageHandler = (event: any) => {
+      if (event.data.type === 'AuthResponse') {
+        window.removeEventListener('message', messageHandler);
+        resolve(event.data.msg);
+      }
+    };
+    window.addEventListener('message', messageHandler);
+    window.parent.postMessage({ type: 'AuthRequest' }, '*');
+
+    setTimeout(() => {
+      window.removeEventListener('message', messageHandler);
+      reject(new Error('Session request timed out'));
+    }, 2000); // 5 seconds timeout
+  });
+}
+
+async function getFile(appId: string): Promise<any> {
   try {
+    const auth = await requestSession();
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
     const response = await axios.get(`${apiUrl}/apps/${appId}/file`, {
       headers: {
@@ -27,12 +46,9 @@ async function getFile(
   }
 }
 
-async function saveFile(
-  appId: string,
-  auth: AuthResponse | undefined,
-  content: any
-): Promise<any> {
+async function saveFile(appId: string, content: any): Promise<any> {
   try {
+    const auth = await requestSession();
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
     const blob = new Blob([content], { type: 'application/json' });
     const formData = new FormData();
@@ -57,15 +73,9 @@ async function saveFile(
  */
 export class LangdbDrive implements Contents.IDrive {
   readonly serverSettings: ServerConnection.ISettings;
-  private auth: AuthResponse | undefined;
 
-  constructor(registry: DocumentRegistry, auth: AuthResponse | undefined) {
+  constructor(registry: DocumentRegistry) {
     this.serverSettings = ServerConnection.makeSettings();
-    this.auth = auth;
-  }
-
-  setAuth(auth: AuthResponse): void {
-    this.auth = auth;
   }
 
   /**
@@ -115,7 +125,7 @@ export class LangdbDrive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     const appId = path.replace('.ipynb', '');
-    const result = await getFile(appId, this.auth);
+    const result = await getFile(appId);
 
     // check if result is json object
     const result_string = JSON.stringify(result);
@@ -206,7 +216,7 @@ export class LangdbDrive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     const appId = path.replace('.ipynb', '');
     try {
-      const response = await saveFile(appId, this.auth, options.content);
+      const response = await saveFile(appId, options.content);
       console.log(response);
       return Promise.resolve(options as Contents.IModel);
     } catch (e: any) {

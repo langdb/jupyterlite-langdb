@@ -8,6 +8,25 @@ export type AuthResponse = {
   token: string;
   apiUrl: string;
 };
+function requestSession(): Promise<AuthResponse> {
+  return new Promise((resolve, reject) => {
+    const messageHandler = (event: any) => {
+      console.log('received event');
+      if (event.data.type === 'AuthResponse') {
+        window.removeEventListener('message', messageHandler);
+        resolve(event.data.msg);
+      }
+    };
+    window.addEventListener('message', messageHandler);
+    window.parent.postMessage({ type: 'AuthRequest' }, '*');
+
+    setTimeout(() => {
+      window.removeEventListener('message', messageHandler);
+      reject(new Error('Session request timed out'));
+    }, 2000); // 5 seconds timeout
+  });
+}
+
 /**
  * A kernel that exexutes request against langdb.
  */
@@ -56,12 +75,7 @@ export class LangdbKernel extends BaseKernel {
     console.debug(`Original code: ${code}`);
 
     try {
-      const authStr = window.localStorage.getItem('auth');
-      let auth = undefined as AuthResponse | undefined;
-      if (authStr) {
-        auth = JSON.parse(authStr);
-      }
-
+      const auth = await requestSession();
       const apiUrl = auth?.apiUrl || LANGDB_API_URL;
       const queryUrl = `${apiUrl}/query`;
       const response = await axios.post(
