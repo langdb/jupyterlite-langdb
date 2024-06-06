@@ -236,6 +236,9 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options: Partial<Contents.IModel>
   ): Promise<Contents.IModel> {
+    if (path.startsWith('https:/')) {
+      return Promise.resolve(options as Contents.IModel);
+    }
     const appId = path.replace('.ipynb', '');
     try {
       const response = await saveFile(appId, options.content);
