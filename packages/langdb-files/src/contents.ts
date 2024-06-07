@@ -127,9 +127,14 @@ export class LangdbDrive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     if (path.startsWith('https:/')) {
-      const response = await axios.get(path);
+      // TODO: dont know why this is happening
+      const temp_path = path.replace(
+        'https:/raw.githubusercontent.com',
+        'https://raw.githubusercontent.com'
+      );
+      const response = await axios.get(temp_path);
       // get last part of path
-      const parts = path.split('/');
+      const parts = temp_path.split('/');
       const name = parts[parts.length - 1];
       const contents: Contents.IModel = {
         type: 'notebook',
