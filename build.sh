@@ -20,7 +20,7 @@ cp "notebooks/samples.css" "dist/notebooks-samples/samples.css"
 ls -la dist/notebooks-samples/
 
 
-if [ "$OSTYPE" == "darwin"* ]; then
+if [ "$OSTYPE" = "darwin"* ]; then
     sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="/notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
     sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="/notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
 else
