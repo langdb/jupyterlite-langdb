@@ -8,10 +8,6 @@ rm -f .jupyterlite.doit.db
 
 # Run jupyter lite build with output directory as dist
 poetry run jupyter lite build --output-dir dist
-echo "=== JupyterLite build done ==="
-ls -la dist/notebooks/
-
-echo "=== Copied the notebooks to samples folder ==="
 
 src="dist/notebooks"
 dst="dist/notebooks-samples"
@@ -22,14 +18,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else 
     cp -R "$src/"* "$dst"
 fi
-
-echo "=== list the files in samples folder ==="
-
-ls -la dist/notebooks-samples/
-
-
-
-echo "=== Copying the notebooks and css files ==="
 
 
 cp "notebooks/notebooks.css" "dist/notebooks/notebooks.css"
