@@ -16,7 +16,12 @@ echo "=== Copied the notebooks to samples folder ==="
 src="dist/notebooks"
 dst="dist/notebooks-samples"
 mkdir -p "$dst"
-cp -R "$src/"* "$dst"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    cp -R "$src/" "$dst"
+else 
+    cp -R "$src/"* "$dst"
+fi
 
 echo "=== list the files in samples folder ==="
 
