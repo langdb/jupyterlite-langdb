@@ -1,5 +1,4 @@
 import { KernelMessage } from '@jupyterlab/services';
-import axios from 'axios';
 import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
@@ -176,17 +175,15 @@ export class LangdbKernel extends BaseKernel {
       const auth = await requestSession();
       const apiUrl = auth?.apiUrl || LANGDB_API_URL;
       const queryUrl = `${apiUrl}/query`;
-      const response = await axios.post(
-        queryUrl,
-        { query: code },
-        {
-          headers: {
-            Authorization: `Bearer ${auth?.token}`
-          }
-        }
-      );
+      const response = await fetch(queryUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${auth?.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: code })
+      });
       let status = 'ok';
-
       if (response.status >= 200 && response.status < 300) {
         console.debug('POST request successful');
         status = 'ok';
@@ -194,10 +191,17 @@ export class LangdbKernel extends BaseKernel {
         console.debug('POST request failed with status:', response.status);
         status = 'error';
       }
-
-      if (typeof response.data !== 'object') {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/event-stream')) {
+        return this.handleStreamResponse(response);
+      }
+      let jsonResponse;
+      const rawResponse = await response.text();
+      try {
+        jsonResponse = JSON.parse(rawResponse);
+        console.log('jsonResponse', jsonResponse);
+      } catch (e: any) {
         console.warn('JSON parsing failed, returning raw response');
-        const rawResponse = response.data;
         this.publishExecuteResult({
           execution_count: this.executionCount,
           data: {
@@ -211,8 +215,6 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         };
       }
-
-      const jsonResponse = response.data;
       if (storeJson) {
         this.storedJson = jsonResponse;
       }
@@ -290,6 +292,81 @@ export class LangdbKernel extends BaseKernel {
       };
     }
   }
+  // Method to handle streaming response
+  async handleStreamResponse(
+    response: Response
+  ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
+    return new Promise<KernelMessage.IExecuteReplyMsg['content']>(
+      (resolve, reject) => {
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+          const errorMsg = 'No reader available on response body';
+          console.error(errorMsg);
+          reject(this.createErrorResponse(errorMsg));
+          return;
+        }
+
+        const decoder = new TextDecoder('utf-8');
+
+        // Function to process each chunk
+        const processChunk = async ({
+          done,
+          value
+        }: ReadableStreamReadResult<Uint8Array>) => {
+          if (done) {
+            console.log('Stream ended');
+            resolve(this.createSuccessResponse());
+            return;
+          }
+
+          try {
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('Received data chunk:', chunk);
+            this.stream({ name: 'stdout', text: chunk });
+
+            // Read the next chunk
+            reader.read().then(processChunk).catch(handleError);
+          } catch (error) {
+            handleError(error);
+          }
+        };
+
+        // Function to handle errors
+        const handleError = (error: any) => {
+          console.error('Stream error:', error);
+          this.stream({ name: 'stderr', text: error.message });
+          reject(this.createErrorResponse(error.message, error.name));
+        };
+
+        // Read the first chunk
+        reader.read().then(processChunk).catch(handleError);
+      }
+    );
+  }
+
+  // Helper method to create a success response
+  private createSuccessResponse(): KernelMessage.IExecuteReplyMsg['content'] {
+    return {
+      status: 'ok',
+      execution_count: this.executionCount,
+      user_expressions: {}
+    };
+  }
+
+  // Helper method to create an error response
+  private createErrorResponse(
+    errorMessage: string,
+    errorName: string = ''
+  ): KernelMessage.IExecuteReplyMsg['content'] {
+    return {
+      status: 'error',
+      ename: errorName,
+      evalue: errorMessage,
+      execution_count: this.executionCount,
+      traceback: []
+    };
+  }
 
   /**
    * Handle an complete_request message
@@ -338,7 +415,10 @@ export class LangdbKernel extends BaseKernel {
   async commInfoRequest(
     content: KernelMessage.ICommInfoRequestMsg['content']
   ): Promise<KernelMessage.ICommInfoReplyMsg['content']> {
-    throw new Error('Not implemented');
+    return {
+      comms: {},
+      status: 'ok'
+    };
   }
 
   /**
@@ -356,7 +436,7 @@ export class LangdbKernel extends BaseKernel {
    * @param msg - The comm_open message.
    */
   async commOpen(msg: KernelMessage.ICommOpenMsg): Promise<void> {
-    throw new Error('Not implemented');
+    return;
   }
 
   /**
@@ -365,7 +445,7 @@ export class LangdbKernel extends BaseKernel {
    * @param msg - The comm_msg message.
    */
   async commMsg(msg: KernelMessage.ICommMsgMsg): Promise<void> {
-    throw new Error('Not implemented');
+    return;
   }
 
   /**
@@ -374,7 +454,7 @@ export class LangdbKernel extends BaseKernel {
    * @param close - The comm_close message.
    */
   async commClose(msg: KernelMessage.ICommCloseMsg): Promise<void> {
-    throw new Error('Not implemented');
+    return;
   }
 }
 

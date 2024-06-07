@@ -30,8 +30,7 @@
   "dependencies": {
     "@jupyterlab/services": "^7.2.1",
     "@jupyterlite/kernel": "^0.3.0",
-    "@jupyterlite/server": "^0.3.0",
-    "axios": "^1.7.2"
+    "@jupyterlite/server": "^0.3.0"
   },
   "resolutions": {
     "@jupyterlab/services/ws": "8.12.0",
