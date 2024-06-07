@@ -12,7 +12,7 @@ poetry run jupyter lite build --output-dir dist
 src="dist/notebooks"
 dst="dist/notebooks-samples"
 mkdir -p "$dst"
-cp -R "$src/" "$dst"
+cp -R "$src" "$dst"
 
 cp "notebooks/notebooks.css" "dist/notebooks/notebooks.css"
 cp "notebooks/samples.css" "dist/notebooks-samples/samples.css"
