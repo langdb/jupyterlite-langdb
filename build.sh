@@ -9,15 +9,23 @@ rm -f .jupyterlite.doit.db
 # Run jupyter lite build with output directory as dist
 poetry run jupyter lite build --output-dir dist
 echo "=== JupyterLite build done ==="
-ls -la dist/notebooks-samples/
+ls -la dist/notebooks/
 
-echo "=== Copying the notebooks and css files ==="
-
+echo "=== Copied the notebooks to samples folder ==="
 
 src="dist/notebooks"
 dst="dist/notebooks-samples"
 mkdir -p "$dst"
-cp -R "$src" "$dst"
+cp -R "$src/"* "$dst"
+
+echo "=== list the files in samples folder ==="
+
+ls -la dist/notebooks-samples/
+
+
+
+echo "=== Copying the notebooks and css files ==="
+
 
 cp "notebooks/notebooks.css" "dist/notebooks/notebooks.css"
 cp "notebooks/samples.css" "dist/notebooks-samples/samples.css"
