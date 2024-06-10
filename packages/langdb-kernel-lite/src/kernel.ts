@@ -221,10 +221,9 @@ export class LangdbKernel extends BaseKernel {
       }
 
       if (code.toLowerCase().startsWith('chat')) {
-        const params = jsonResponse.params || {};
-        const endpoint = jsonResponse.endpoint_name || {};
-        const server_url =
-            jsonResponse.server_url || 'http://localhost:8080/stream';
+        const params = jsonResponse.params || null;
+        const endpoint_name = jsonResponse.endpoint_name || null;
+        const server_url = jsonResponse.server_url || 'http://localhost:8080/stream';
 
         let chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
         await fetch(chatUrl, {
@@ -234,33 +233,15 @@ export class LangdbKernel extends BaseKernel {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            endpoint_name: jsonResponse.endpoint_name || null,
-            server_url: jsonResponse.server_url || null,
-            params: jsonResponse.params || {}
+            endpoint_name,
+            server_url,
+            params
           })
         });
 
-        const initialParams = { server_url, endpoint };
-
-        if (!endpoint) {
+        if (!endpoint_name) {
           throw new Error('Endpoint not specified.');
         }
-
-        const combinedParams = { ...initialParams, ...params };
-        const query = Object.entries(combinedParams)
-          .map(([k, v]) => `${k}=${v}`)
-          .join('&');
-        const iframeSrc = `https://langdb.github.io/langdb-widget?${query}`;
-        console.debug(`iframe url: ${iframeSrc}`);
-
-        const iframeHtml = `<iframe src="${iframeSrc}" width="100%" height="600" frameborder="0"></iframe>`;
-        this.publishExecuteResult({
-          execution_count: this.executionCount,
-          data: {
-            'text/html': iframeHtml
-          },
-          metadata: {}
-        });
 
         return {
           status: 'ok',
