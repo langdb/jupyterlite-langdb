@@ -4,6 +4,7 @@ const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
   token: string;
+  appId: string;
   apiUrl: string;
 };
 function requestSession(): Promise<AuthResponse> {
@@ -165,7 +166,7 @@ export class LangdbKernel extends BaseKernel {
    */
   async executeLocalRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
-    storeJson: boolean
+    storeJson: boolean,
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
     console.debug('Starting execution of code');
@@ -220,11 +221,25 @@ export class LangdbKernel extends BaseKernel {
       }
 
       if (code.toLowerCase().startsWith('chat')) {
-        console.debug(JSON.stringify(jsonResponse));
         const params = jsonResponse.params || {};
         const endpoint = jsonResponse.endpoint_name || {};
         const server_url =
-          jsonResponse.server_url || 'http://localhost:8080/stream';
+            jsonResponse.server_url || 'http://localhost:8080/stream';
+
+        let chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
+        await fetch(chatUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${auth?.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            endpoint_name: jsonResponse.endpoint_name || null,
+            server_url: jsonResponse.server_url || null,
+            params: jsonResponse.params || {}
+          })
+        });
+
         const initialParams = { server_url, endpoint };
 
         if (!endpoint) {
