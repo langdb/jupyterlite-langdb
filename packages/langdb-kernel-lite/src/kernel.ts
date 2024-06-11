@@ -166,7 +166,7 @@ export class LangdbKernel extends BaseKernel {
    */
   async executeLocalRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
-    storeJson: boolean,
+    storeJson: boolean
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
     console.debug('Starting execution of code');
@@ -219,13 +219,11 @@ export class LangdbKernel extends BaseKernel {
       if (storeJson) {
         this.storedJson = jsonResponse;
       }
-
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
         const endpoint_name = jsonResponse.endpoint_name || null;
-        const server_url = jsonResponse.server_url || 'http://localhost:8080/stream';
-
-        let chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
+        const server_url = jsonResponse.server_url || `${auth.apiUrl}/stream`;
+        const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
         await fetch(chatUrl, {
           method: 'POST',
           headers: {
@@ -242,6 +240,7 @@ export class LangdbKernel extends BaseKernel {
         if (!endpoint_name) {
           throw new Error('Endpoint not specified.');
         }
+        window.parent.postMessage({ type: 'RefreshChat' }, '*');
 
         return {
           status: 'ok',
