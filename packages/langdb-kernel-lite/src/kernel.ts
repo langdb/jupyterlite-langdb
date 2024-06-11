@@ -4,6 +4,7 @@ const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
   token: string;
+  appId: string;
   apiUrl: string;
 };
 function requestSession(): Promise<AuthResponse> {
@@ -218,34 +219,28 @@ export class LangdbKernel extends BaseKernel {
       if (storeJson) {
         this.storedJson = jsonResponse;
       }
-
       if (code.toLowerCase().startsWith('chat')) {
-        console.debug(JSON.stringify(jsonResponse));
-        const params = jsonResponse.params || {};
-        const endpoint = jsonResponse.endpoint_name || {};
-        const server_url =
-          jsonResponse.server_url || 'http://localhost:8080/stream';
-        const initialParams = { server_url, endpoint };
+        const params = jsonResponse.params || null;
+        const endpoint_name = jsonResponse.endpoint_name || null;
+        const server_url = jsonResponse.server_url || `${auth.apiUrl}/stream`;
+        const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
+        await fetch(chatUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${auth?.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            endpoint_name,
+            server_url,
+            params
+          })
+        });
 
-        if (!endpoint) {
+        if (!endpoint_name) {
           throw new Error('Endpoint not specified.');
         }
-
-        const combinedParams = { ...initialParams, ...params };
-        const query = Object.entries(combinedParams)
-          .map(([k, v]) => `${k}=${v}`)
-          .join('&');
-        const iframeSrc = `https://langdb.github.io/langdb-widget?${query}`;
-        console.debug(`iframe url: ${iframeSrc}`);
-
-        const iframeHtml = `<iframe src="${iframeSrc}" width="100%" height="600" frameborder="0"></iframe>`;
-        this.publishExecuteResult({
-          execution_count: this.executionCount,
-          data: {
-            'text/html': iframeHtml
-          },
-          metadata: {}
-        });
+        window.parent.postMessage({ type: 'RefreshChat' }, '*');
 
         return {
           status: 'ok',
