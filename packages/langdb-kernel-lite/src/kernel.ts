@@ -221,7 +221,7 @@ export class LangdbKernel extends BaseKernel {
       }
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
-        const endpoint_name = jsonResponse.endpoint_name || null;
+        const agent_name = jsonResponse.agent_name || null;
         const server_url = jsonResponse.server_url || `${auth.apiUrl}/stream`;
         const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
         await fetch(chatUrl, {
@@ -231,14 +231,14 @@ export class LangdbKernel extends BaseKernel {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            endpoint_name,
+            endpoint_name: agent_name,
             server_url,
             params
           })
         });
 
-        if (!endpoint_name) {
-          throw new Error('Endpoint not specified.');
+        if (!agent_name) {
+          throw new Error('Agent not specified.');
         }
         window.parent.postMessage({ type: 'RefreshChat' }, '*');
 
