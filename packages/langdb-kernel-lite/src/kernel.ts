@@ -231,7 +231,7 @@ export class LangdbKernel extends BaseKernel {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            endpoint_name: agent_name,
+            agent_name,
             server_url,
             params
           })
