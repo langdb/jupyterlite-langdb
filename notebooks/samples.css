@@ -11,3 +11,7 @@
 #main-panel {
     top: 42px !important;
 }
+
+.jp-WindowedPanel-outer {
+    background-color: rgb(243,244,246) !important;
+}
