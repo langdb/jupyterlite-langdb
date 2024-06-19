@@ -40,6 +40,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     serviceManager.contents.addDrive(drive);
 
     console.log('Drive "ldrive" attached');
+    window.parent.postMessage({ type: 'JupyterReady' }, '*');
   }
 };
 
