@@ -3,13 +3,15 @@
 #menu-panel-wrapper {
     display: none;
 }
-
+#jp-title {
+    display: none;
+}
 .lm-Widget.jp-CommandToolbarButton.jp-nb-interface-switcher-button.jp-Toolbar-item {
     display: none;
 }
 
 #main-panel {
-    top: 42px !important;
+    top: 82px !important;
 }
 
 .jp-WindowedPanel-outer {
