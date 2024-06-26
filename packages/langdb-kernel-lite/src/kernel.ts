@@ -188,6 +188,9 @@ export class LangdbKernel extends BaseKernel {
       if (response.status >= 200 && response.status < 300) {
         console.debug('POST request successful');
         status = 'ok';
+        if (code.toLowerCase().startsWith('create ')) {
+          window.parent.postMessage({ type: 'RefreshSidebar' }, '*');
+        }
       } else {
         console.debug('POST request failed with status:', response.status);
         status = 'error';
