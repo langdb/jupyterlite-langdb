@@ -3,9 +3,10 @@ import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
-  token: string;
+  token?: string;
   appId: string;
   apiUrl: string;
+  publicApp?: boolean;
 };
 function requestSession(): Promise<AuthResponse> {
   return new Promise((resolve, reject) => {
@@ -26,6 +27,17 @@ function requestSession(): Promise<AuthResponse> {
   });
 }
 
+const getHeaders = (auth: AuthResponse): Headers => {
+  let headers = new Headers();
+  headers.set('Content-Type', 'application/json');
+  if (auth.publicApp) {
+    headers.set('X-PUBLIC-APPLICATION-ID', auth?.appId);
+  } else {
+    headers.set('Authorization', `Bearer ${auth?.token}`);
+  }
+
+  return headers;
+}
 /**
  * A kernel that exexutes request against langdb.
  */
@@ -178,17 +190,14 @@ export class LangdbKernel extends BaseKernel {
       const queryUrl = `${apiUrl}/query`;
       const response = await fetch(queryUrl, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${auth?.token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getHeaders(auth),
         body: JSON.stringify({ query: code })
       });
       let status = 'ok';
       if (response.status >= 200 && response.status < 300) {
         console.debug('POST request successful');
         status = 'ok';
-        if (code.toLowerCase().startsWith('create ') || code.toLowerCase().startsWith('drop ')){
+        if (code.toLowerCase().startsWith('create ') || code.toLowerCase().startsWith('drop ')) {
           window.parent.postMessage({ type: 'RefreshSidebar' }, '*');
         }
       } else {
@@ -229,10 +238,7 @@ export class LangdbKernel extends BaseKernel {
         const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
         await fetch(chatUrl, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${auth?.token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: getHeaders(auth),
           body: JSON.stringify({
             agent_name,
             server_url,
