@@ -46,7 +46,7 @@ async function getFile(appId: string): Promise<any> {
 }
 
 const getHeaders = (auth: AuthResponse, appId: string): Record<string, any> => {
-  let headers: Record<string, any> = {'Content-Type': 'application/json'};
+  const headers: Record<string, any> = { 'Content-Type': 'application/json' };
   if (auth.publicApp) {
     headers['X-PUBLIC-APPLICATION-ID'] = appId;
   } else {
@@ -54,7 +54,7 @@ const getHeaders = (auth: AuthResponse, appId: string): Record<string, any> => {
   }
 
   return headers;
-}
+};
 
 async function saveFile(appId: string, content: any): Promise<any> {
   try {
