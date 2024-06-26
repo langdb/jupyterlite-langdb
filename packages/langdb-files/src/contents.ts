@@ -8,6 +8,7 @@ const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 export type AuthResponse = {
   token: string;
   apiUrl: string;
+  publicApp?: boolean;
 };
 
 function requestSession(): Promise<AuthResponse> {
@@ -33,9 +34,7 @@ async function getFile(appId: string): Promise<any> {
     const auth = await requestSession();
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
     const response = await axios.get(`${apiUrl}/apps/${appId}/file`, {
-      headers: {
-        Authorization: `Bearer ${auth?.token}`
-      },
+      headers: getHeaders(auth, appId),
       maxBodyLength: Infinity
     });
     // get response data as json
@@ -44,6 +43,17 @@ async function getFile(appId: string): Promise<any> {
     console.error('Error fetching blob:', error);
     throw error;
   }
+}
+
+const getHeaders = (auth: AuthResponse, appId: string): Record<string, any> => {
+  let headers: Record<string, any> = {'Content-Type': 'application/json'};
+  if (auth.publicApp) {
+    headers['X-PUBLIC-APPLICATION-ID'] = appId;
+  } else {
+    headers['Authorization'] = `Bearer ${auth?.token}`;
+  }
+
+  return headers;
 }
 
 async function saveFile(appId: string, content: any): Promise<any> {
