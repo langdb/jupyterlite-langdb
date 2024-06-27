@@ -80,6 +80,33 @@ async function saveFile(appId: string, content: any): Promise<any> {
   }
 }
 
+class LangdbFile implements Contents.IModel {
+  // @ts-ignore
+  name: string;
+  // @ts-ignore
+  path: string;
+  serverPath?: string | undefined;
+  // @ts-ignore
+  type: string;
+  // @ts-ignore
+  writable: boolean;
+  // @ts-ignore
+  created: string;
+  // @ts-ignore
+  last_modified: string;
+  // @ts-ignore
+  mimetype: string;
+  content: any;
+  chunk?: number | undefined;
+  // @ts-ignore
+  format: Contents.FileFormat;
+  size?: number | undefined;
+  indices?: readonly number[] | null | undefined;
+  hash?: string | undefined;
+  hash_algorithm?: string | undefined;
+
+}
+
 /**
  * A Contents.IDrive implementation for s3-api-compatible object storage.
  */
@@ -258,7 +285,9 @@ export class LangdbDrive implements Contents.IDrive {
     try {
       const response = await saveFile(appId, options.content);
       console.log(response);
-      return Promise.resolve(options as Contents.IModel);
+      let model = options as LangdbFile;
+      model.writable = true;
+      return Promise.resolve(model);
     } catch (e: any) {
       console.error(e);
       return Promise.reject(e);
