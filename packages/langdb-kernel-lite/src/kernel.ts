@@ -28,7 +28,7 @@ function requestSession(): Promise<AuthResponse> {
 }
 
 const getHeaders = (auth: AuthResponse): Headers => {
-  let headers = new Headers();
+  const headers = new Headers();
   headers.set('Content-Type', 'application/json');
   if (auth.publicApp) {
     headers.set('X-PUBLIC-APPLICATION-ID', auth?.appId);
@@ -37,7 +37,7 @@ const getHeaders = (auth: AuthResponse): Headers => {
   }
 
   return headers;
-}
+};
 /**
  * A kernel that exexutes request against langdb.
  */
@@ -72,7 +72,7 @@ export class LangdbKernel extends BaseKernel {
       },
       protocol_version: '5.3',
       status: 'ok',
-      banner: 'A jupyter lite kernel for LangDB',
+      banner: 'Langdb Kernel',
       help_links: [
         {
           text: 'langdb Kernel',
@@ -197,7 +197,10 @@ export class LangdbKernel extends BaseKernel {
       if (response.status >= 200 && response.status < 300) {
         console.debug('POST request successful');
         status = 'ok';
-        if (code.toLowerCase().startsWith('create ') || code.toLowerCase().startsWith('drop ')) {
+        if (
+          code.toLowerCase().startsWith('create ') ||
+          code.toLowerCase().startsWith('drop ')
+        ) {
           window.parent.postMessage({ type: 'RefreshSidebar' }, '*');
         }
       } else {
