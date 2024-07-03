@@ -3,3 +3,8 @@
 .lm-Widget.jp-PoweredBy.jp-Toolbar-item {
     display: none;
 }
+
+
+#console-1 > jp-toolbar > div:nth-child(2) {
+    display: none;
+}
