@@ -22,13 +22,18 @@ fi
 
 cp "notebooks/notebooks.css" "dist/notebooks/notebooks.css"
 cp "notebooks/samples.css" "dist/notebooks-samples/samples.css"
+cp "repl/repl.css" "dist/repl/repl.css"
 
 
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
     sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
+    sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../repl/repl.css" /></head>|' dist/repl/index.html
+
 else
     sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
     sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
+    sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../repl/repl.css" /></head>|' dist/repl/index.html
+
 fi
