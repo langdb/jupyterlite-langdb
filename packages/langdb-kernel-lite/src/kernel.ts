@@ -7,11 +7,11 @@ export type AuthResponse = {
   appId: string;
   apiUrl: string;
   publicApp?: boolean;
+  isSample?: boolean;
 };
 function requestSession(): Promise<AuthResponse> {
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
-      console.log('received event');
       if (event.data.type === 'AuthResponse') {
         window.removeEventListener('message', messageHandler);
         resolve(event.data.msg);
@@ -186,6 +186,17 @@ export class LangdbKernel extends BaseKernel {
 
     try {
       const auth = await requestSession();
+      if (!auth) {
+        throw new Error('No auth data found');
+      }
+      if (auth.isSample) {
+        window.parent.postMessage({ type: 'OpenRequireCloneDialog' }, '*');
+        return {
+          status: 'abort',
+          execution_count: this.executionCount,
+          user_expressions: {}
+        } as KernelMessage.IExecuteReplyMsg['content'];
+      }
       const apiUrl = auth?.apiUrl || LANGDB_API_URL;
       const queryUrl = `${apiUrl}/query`;
       const response = await fetch(queryUrl, {
