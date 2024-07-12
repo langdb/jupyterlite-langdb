@@ -277,10 +277,8 @@ export class LangdbKernel extends BaseKernel {
         throw new Error(jsonResponse.exception);
       }
 
-      const data = jsonResponse.data || [];
-
-      const html = toHtml(data);
-      console.debug(`DataFrame created with ${data.length} rows`);
+      const html = toHtml(jsonResponse);
+      console.debug(`DataFrame created with ${jsonResponse.data.length} rows`);
       this.publishExecuteResult({
         execution_count: this.executionCount,
         data: {
@@ -476,9 +474,19 @@ export class LangdbKernel extends BaseKernel {
   }
 }
 
-const toHtml = (jsonData: object[]): string => {
+interface Column {
+  name: string;
+  type: string;
+}
+interface ClickhouseResponse {
+  data: Record<string, object>[];
+  meta: Column[];
+}
+
+const toHtml = (jsonData: ClickhouseResponse): string => {
+  const data = jsonData.data;
   // Check if the input data is an array and has elements
-  if (!Array.isArray(jsonData) || jsonData.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return '<p>No data available to display</p>';
   }
 
@@ -486,17 +494,17 @@ const toHtml = (jsonData: object[]): string => {
   let table = '<table border="1"><thead><tr>';
 
   // Get the headers from the keys of the first object in the array
-  Object.keys(jsonData[0]).forEach(key => {
-    table += `<th>${key}</th>`;
+  jsonData.meta.forEach(col => {
+    table += `<th>${col.name}</th>`;
   });
 
   table += '</tr></thead><tbody>';
 
   // Add rows
-  jsonData.forEach(row => {
+  jsonData.data.forEach(row => {
     table += '<tr>';
-    Object.values(row).forEach(value => {
-      table += `<td>${value}</td>`;
+    jsonData.meta.forEach(col => {
+      table += `<td>${row[col.name]}</td>`;
     });
     table += '</tr>';
   });
