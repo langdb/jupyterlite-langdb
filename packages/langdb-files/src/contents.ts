@@ -104,7 +104,6 @@ class LangdbFile implements Contents.IModel {
   indices?: readonly number[] | null | undefined;
   hash?: string | undefined;
   hash_algorithm?: string | undefined;
-
 }
 
 /**
@@ -285,7 +284,7 @@ export class LangdbDrive implements Contents.IDrive {
     try {
       const response = await saveFile(appId, options.content);
       console.log(response);
-      let model = options as LangdbFile;
+      const model = options as LangdbFile;
       model.writable = true;
       return Promise.resolve(model);
     } catch (e: any) {
