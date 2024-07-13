@@ -25,7 +25,7 @@ pydantic = "<2"
 pyyaml = "^6.0.1"
 pyyaml-include = "^2.1"
 yaml-include = "^1.0.0"
-langdb-jupyterlab-trace-ui = {path = "packages/langdb-trace-ui", develop = true}
+langdb-trace-ui = { path = "packages/langdb-trace-ui", develop = true }
 
 
 [build-system]

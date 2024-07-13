@@ -1,4 +1,4 @@
-# langdb_jupyterlab_trace_ui
+# langdb_trace_ui
 
 [![Github Actions Status](https://github.com/langdb/jupyterlite-langdb/workflows/Build/badge.svg)](https://github.com/langdb/jupyterlite-langdb/actions/workflows/build.yml)
 
@@ -13,7 +13,7 @@ UI to show langdb traces for notebook cells
 To install the extension, execute:
 
 ```bash
-pip install langdb_jupyterlab_trace_ui
+pip install langdb_trace_ui
 ```
 
 ## Uninstall
@@ -21,7 +21,7 @@ pip install langdb_jupyterlab_trace_ui
 To remove the extension, execute:
 
 ```bash
-pip uninstall langdb_jupyterlab_trace_ui
+pip uninstall langdb_trace_ui
 ```
 
 ## Contributing
@@ -36,7 +36,7 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the langdb_jupyterlab_trace_ui directory
+# Change directory to the langdb_trace_ui directory
 # Install package in development mode
 pip install -e "."
 # Link your development version of the extension with JupyterLab
@@ -65,12 +65,12 @@ jupyter lab build --minimize=False
 ### Development uninstall
 
 ```bash
-pip uninstall langdb_jupyterlab_trace_ui
+pip uninstall langdb_trace_ui
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `@langdb/jupyterlab-trace-ui` within that folder.
+folder is located. Then you can remove the symlink named `@langdb/trace-ui` within that folder.
 
 ### Packaging the extension
 

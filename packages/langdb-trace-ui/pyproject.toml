@@ -1,9 +1,13 @@
 [build-system]
-requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version>=0.3.2"]
+requires = [
+    "hatchling>=1.5.0",
+    "jupyterlab>=4.0.0,<5",
+    "hatch-nodejs-version>=0.3.2",
+]
 build-backend = "hatchling.build"
 
 [project]
-name = "langdb_jupyterlab_trace_ui"
+name = "langdb_trace_ui"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -22,8 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = [
-]
+dependencies = []
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
 [tool.hatch.version]
@@ -33,34 +36,34 @@ source = "nodejs"
 fields = ["description", "authors", "urls"]
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["langdb_jupyterlab_trace_ui/labextension"]
+artifacts = ["langdb_trace_ui/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"langdb_jupyterlab_trace_ui/labextension" = "share/jupyter/labextensions/@langdb/jupyterlab-trace-ui"
-"install.json" = "share/jupyter/labextensions/@langdb/jupyterlab-trace-ui/install.json"
+"langdb_trace_ui/labextension" = "share/jupyter/labextensions/@langdb/trace-ui"
+"install.json" = "share/jupyter/labextensions/@langdb/trace-ui/install.json"
 
 [tool.hatch.build.hooks.version]
-path = "langdb_jupyterlab_trace_ui/_version.py"
+path = "langdb_trace_ui/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "langdb_jupyterlab_trace_ui/labextension/static/style.js",
-    "langdb_jupyterlab_trace_ui/labextension/package.json",
+    "langdb_trace_ui/labextension/static/style.js",
+    "langdb_trace_ui/labextension/package.json",
 ]
-skip-if-exists = ["langdb_jupyterlab_trace_ui/labextension/static/style.js"]
+skip-if-exists = ["langdb_trace_ui/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
-npm = ["jlpm"]
+npm = ["yarn"]
 
 [tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
 build_cmd = "install:extension"
-npm = ["jlpm"]
+npm = ["yarn"]
 source_dir = "src"
-build_dir = "langdb_jupyterlab_trace_ui/labextension"
+build_dir = "langdb_trace_ui/labextension"
 
 [tool.jupyter-releaser.options]
 version_cmd = "hatch version"
@@ -68,10 +71,10 @@ version_cmd = "hatch version"
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
     "python -m pip install 'jupyterlab>=4.0.0,<5'",
-    "jlpm",
-    "jlpm build:prod"
+    "yarn",
+    "yarn build:prod",
 ]
-before-build-python = ["jlpm clean:all"]
+before-build-python = ["yarn clean:all"]
 
 [tool.check-wheel-contents]
 ignore = ["W002"]

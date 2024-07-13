@@ -1,5 +1,5 @@
 {
-    "name": "@langdb/jupyterlab-trace-ui",
+    "name": "@langdb/trace-ui",
     "version": "0.1.0",
     "description": "UI to show langdb traces for notebook cells",
     "keywords": [
@@ -26,26 +26,26 @@
         "url": "https://github.com/langdb/jupyterlite-langdb.git"
     },
     "scripts": {
-        "build": "jlpm build:lib && jlpm build:labextension:dev",
-        "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+        "build": "yarn build:lib && yarn build:labextension:dev",
+        "build:prod": "yarn clean && yarn build:lib:prod && yarn build:labextension",
         "build:labextension": "jupyter labextension build .",
         "build:labextension:dev": "jupyter labextension build --development True .",
         "build:lib": "tsc --sourceMap",
         "build:lib:prod": "tsc",
-        "clean": "jlpm clean:lib",
+        "clean": "yarn clean:lib",
         "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
         "clean:lintcache": "rimraf .eslintcache .stylelintcache",
-        "clean:labextension": "rimraf langdb_jupyterlab_trace_ui/labextension langdb_jupyterlab_trace_ui/_version.py",
-        "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
-        "eslint": "jlpm eslint:check --fix",
+        "clean:labextension": "rimraf langdb_trace_ui/labextension langdb_trace_ui/_version.py",
+        "clean:all": "yarn clean:lib && yarn clean:labextension && yarn clean:lintcache",
+        "eslint": "yarn eslint:check --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
-        "install:extension": "jlpm build",
-        "lint": "jlpm stylelint && jlpm prettier && jlpm eslint",
-        "lint:check": "jlpm stylelint:check && jlpm prettier:check && jlpm eslint:check",
-        "prettier": "jlpm prettier:base --write --list-different",
+        "install:extension": "yarn build",
+        "lint": "yarn stylelint && yarn prettier && yarn eslint",
+        "lint:check": "yarn stylelint:check && yarn prettier:check && yarn eslint:check",
+        "prettier": "yarn prettier:base --write --list-different",
         "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
-        "prettier:check": "jlpm prettier:base --check",
-        "stylelint": "jlpm stylelint:check --fix",
+        "prettier:check": "yarn prettier:base --check",
+        "stylelint": "yarn stylelint:check --fix",
         "stylelint:check": "stylelint --cache \"style/**/*.css\"",
         "watch": "run-p watch:src watch:labextension",
         "watch:src": "tsc -w --sourceMap",
@@ -102,7 +102,7 @@
     },
     "jupyterlab": {
         "extension": true,
-        "outputDir": "langdb_jupyterlab_trace_ui/labextension"
+        "outputDir": "langdb_trace_ui/labextension"
     },
     "eslintIgnore": [
         "node_modules",

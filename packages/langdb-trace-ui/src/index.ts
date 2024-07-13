@@ -233,10 +233,10 @@ class TraceUIWidgetExtension implements DocumentRegistry.WidgetExtension {
     private _tracker: INotebookTracker;
 }
 /**
- * Initialization data for the @langdb/jupyterlab-trace-ui extension.
+ * Initialization data for the @langdb/trace-ui extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-    id: '@langdb/jupyterlab-trace-ui:plugin',
+    id: '@langdb/trace-ui:plugin',
     description: 'UI to show langdb traces for notebook cells',
     requires: [INotebookTracker],
     autoStart: true,
@@ -247,7 +247,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         widget.title.closable = true;
         //app.shell.add(widget, 'main');
         app.docRegistry.addWidgetExtension('Notebook', new TraceUIWidgetExtension(tracker));
-        console.log('JupyterLab extension @langdb/jupyterlab-trace-ui is activated');
+        console.log('JupyterLab extension @langdb/trace-ui is activated');
     }
 };
 export default plugin;
