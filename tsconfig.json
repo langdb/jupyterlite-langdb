@@ -17,6 +17,7 @@
     "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,
+    "strictPropertyInitialization": false,
     "target": "ES2018"
   },
   "include": [

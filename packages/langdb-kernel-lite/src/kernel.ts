@@ -479,7 +479,7 @@ interface Column {
   type: string;
 }
 interface ClickhouseResponse {
-  data: Record<string, object>[];
+  data: Record<string, any>[];
   meta: Column[];
 }
 
@@ -504,7 +504,9 @@ const toHtml = (jsonData: ClickhouseResponse): string => {
   jsonData.data.forEach(row => {
     table += '<tr>';
     jsonData.meta.forEach(col => {
-      table += `<td>${row[col.name]}</td>`;
+      let val = row[col.name];
+      val = typeof val === 'object' ? JSON.stringify(row[col.name]) : val;
+      table += `<td>${val}</td>`;
     });
     table += '</tr>';
   });
