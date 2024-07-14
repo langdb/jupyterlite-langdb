@@ -202,7 +202,7 @@ export class LangdbKernel extends BaseKernel {
       const response = await fetch(queryUrl, {
         method: 'POST',
         headers: getHeaders(auth),
-        body: JSON.stringify({ query: code })
+        body: JSON.stringify({ query: code, trace: true })
       });
       let status = 'ok';
       if (response.status >= 200 && response.status < 300) {
@@ -217,6 +217,15 @@ export class LangdbKernel extends BaseKernel {
       } else {
         console.debug('POST request failed with status:', response.status);
         status = 'error';
+      }
+      const traceId = response.headers.get('x-trace-id');
+      if (traceId) {
+        this.displayData({
+          data: {
+            'text/plain': ''
+          },
+          metadata: { trace: traceId }
+        });
       }
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('text/event-stream')) {
@@ -234,7 +243,7 @@ export class LangdbKernel extends BaseKernel {
           data: {
             'text/plain': rawResponse
           },
-          metadata: {}
+          metadata: { trace: traceId }
         });
         return {
           status: 'ok',
@@ -247,21 +256,21 @@ export class LangdbKernel extends BaseKernel {
       }
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
-        const agent_name = jsonResponse.agent_name || null;
+        const model_name = jsonResponse.model_name || null;
         const server_url = jsonResponse.server_url || `${auth.apiUrl}/stream`;
         const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
         await fetch(chatUrl, {
           method: 'POST',
           headers: getHeaders(auth),
           body: JSON.stringify({
-            agent_name,
+            model_name,
             server_url,
             params
           })
         });
 
-        if (!agent_name) {
-          throw new Error('Agent not specified.');
+        if (!model_name) {
+          throw new Error('Model not specified.');
         }
         window.parent.postMessage({ type: 'RefreshChat' }, '*');
 
@@ -284,7 +293,7 @@ export class LangdbKernel extends BaseKernel {
         data: {
           'text/html': html
         },
-        metadata: {}
+        metadata: { trace: traceId }
       });
 
       return {
@@ -315,7 +324,6 @@ export class LangdbKernel extends BaseKernel {
     return new Promise<KernelMessage.IExecuteReplyMsg['content']>(
       (resolve, reject) => {
         const reader = response.body?.getReader();
-
         if (!reader) {
           const errorMsg = 'No reader available on response body';
           console.error(errorMsg);

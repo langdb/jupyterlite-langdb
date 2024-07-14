@@ -1,11 +1,12 @@
 #!/bin/sh
 
 # Remove the dist folder
-rm -rf dist
+rm -rf dist || 0
 
 # Remove the .jupyterlite.doit.db file
-rm -f .jupyterlite.doit.db
+rm -f .jupyterlite.doit.db || 0
 
+poetry install
 # Run jupyter lite build with output directory as dist
 poetry run jupyter lite build --output-dir dist
 
@@ -25,15 +26,12 @@ cp "notebooks/samples.css" "dist/notebooks-samples/samples.css"
 cp "repl/repl.css" "dist/repl/repl.css"
 
 
-
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
-    sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
-    sed -i '' 's|</head>|<link rel="stylesheet" type="text/css" href="../repl/repl.css" /></head>|' dist/repl/index.html
-
+    BACKUP_FILE=".bak"
 else
-    sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
-    sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
-    sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="../repl/repl.css" /></head>|' dist/repl/index.html
-
+    BACKUP_FILE=""
 fi
+
+sed -i$BACKUP_FILE 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks/notebooks.css" /></head>|' dist/notebooks/index.html
+sed -i$BACKUP_FILE 's|</head>|<link rel="stylesheet" type="text/css" href="../notebooks-samples/samples.css" /></head>|' dist/notebooks-samples/index.html
+sed -i$BACKUP_FILE 's|</head>|<link rel="stylesheet" type="text/css" href="../repl/repl.css" /></head>|' dist/repl/index.html
