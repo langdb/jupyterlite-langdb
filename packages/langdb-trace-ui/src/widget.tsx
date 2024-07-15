@@ -30,6 +30,7 @@ interface Span {
     attribute: Map<string, any>,
 }
 
+class StreamDone extends Error { }
 function Popover(props: IPopoverProps) {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -76,17 +77,28 @@ function Popover(props: IPopoverProps) {
                 });
             }
             const session = await requestSession();
-            await fetchEventSource(`${session?.apiUrl}/trace/${props.trace_id}`, {
-                headers: getHeaders(session),
-                onmessage(event) {
-                    console.log(event.data);
-                    const parsedData = JSON.parse(event.data);
-                    setData((data) => [...data, parsedData]);
-                },
-                onerror(err) {
-                    console.log(err);
-                },
-            })
+            try {
+                await fetchEventSource(`${session?.apiUrl}/trace/${props.trace_id}`, {
+                    headers: getHeaders(session),
+                    async onopen(response) {
+                        if (response.ok && response.headers.get('content-type') === 'application/json') {
+                            const parsed = await response.json();
+                            setData((_data) => parsed);
+                            throw new StreamDone();
+                        }
+                    },
+                    onmessage(event) {
+                        const parsedData = JSON.parse(event.data);
+                        setData((data) => [...data, parsedData]);
+                    },
+                    onerror(err) {
+                        if (err instanceof StreamDone) {
+                            throw err;
+                        }
+                    },
+                })
+            } catch {
+            }
         }
         get_events()
     }, [props.trace_id]);
