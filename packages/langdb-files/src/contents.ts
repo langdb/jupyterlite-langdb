@@ -29,9 +29,8 @@ function requestSession(): Promise<AuthResponse> {
   });
 }
 
-async function getFile(appId: string): Promise<any> {
+async function getFile(appId: string, auth: AuthResponse): Promise<any> {
   try {
-    const auth = await requestSession();
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
     const response = await axios.get(`${apiUrl}/apps/${appId}/file`, {
       headers: getHeaders(auth, appId),
@@ -56,9 +55,13 @@ const getHeaders = (auth: AuthResponse, appId: string): Record<string, any> => {
   return headers;
 };
 
-async function saveFile(appId: string, content: any): Promise<any> {
+async function saveFile(
+  appId: string,
+  content: any,
+  authSession: AuthResponse
+): Promise<any> {
   try {
-    const auth = await requestSession();
+    const auth = authSession;
     const apiUrl = auth?.apiUrl || LANGDB_API_URL;
     const blob = new Blob([JSON.stringify(content)], {
       type: 'application/json'
@@ -171,7 +174,7 @@ export class LangdbDrive implements Contents.IDrive {
         name: name,
         content: response.data,
         created: '',
-        writable: true,
+        writable: false,
         last_modified: '',
         size: response.data.length,
         mimetype: 'application/json'
@@ -180,7 +183,8 @@ export class LangdbDrive implements Contents.IDrive {
     }
 
     const appId = path.replace('.ipynb', '');
-    const result = await getFile(appId);
+    const auth = await requestSession();
+    const result = await getFile(appId, auth);
 
     // check if result is json object
     const result_string = JSON.stringify(result);
@@ -192,7 +196,7 @@ export class LangdbDrive implements Contents.IDrive {
       name: `${path}.ipynb`,
       content: display_content,
       created: '',
-      writable: true,
+      writable: !!auth.token,
       last_modified: '',
       size: result_string.length,
       mimetype: 'application/json'
@@ -212,7 +216,6 @@ export class LangdbDrive implements Contents.IDrive {
    * path if necessary.
    */
   async getDownloadUrl(path: string): Promise<string> {
-    console.log('=== GETTING DOWNLOAD URL', path);
     throw Error('Not yet implemented');
   }
 
@@ -274,10 +277,12 @@ export class LangdbDrive implements Contents.IDrive {
     }
     const appId = path.replace('.ipynb', '');
     try {
-      const response = await saveFile(appId, options.content);
-      console.log(response);
+      const auth = await requestSession();
+      if (!auth.publicApp && auth.token) {
+        await saveFile(appId, options.content, auth);
+      }
       const model = options as LangdbFile;
-      model.writable = true;
+      model.writable = !auth.publicApp;
       return Promise.resolve(model);
     } catch (e: any) {
       console.error(e);
@@ -308,7 +313,6 @@ export class LangdbDrive implements Contents.IDrive {
    *   checkpoint is created.
    */
   async createCheckpoint(path: string): Promise<Contents.ICheckpointModel> {
-    console.log('===== Creating checkpoint', path);
     const emptyCheckpoint: Contents.ICheckpointModel = {
       id: '',
       last_modified: ''
