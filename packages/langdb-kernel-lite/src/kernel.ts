@@ -42,7 +42,6 @@ const getHeaders = (auth: AuthResponse): Headers => {
  * A kernel that exexutes request against langdb.
  */
 export class LangdbKernel extends BaseKernel {
-  private storedJson: object | undefined = undefined;
   private kernelOptions: any;
   private kernelspecs: IKernelSpecs;
   private pythonKernel: IKernel | undefined;
@@ -88,20 +87,37 @@ export class LangdbKernel extends BaseKernel {
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     let code = content.code.trim();
 
-    if (code.startsWith('%python')) {
-      await this.handleRunPython(code);
-      return {
-        status: 'ok',
-        execution_count: this.executionCount,
-        user_expressions: {}
-      };
-    } else {
-      const storeJson = code.startsWith('%storejson');
-      code = code.replace('%storejson', '').trim();
-      // Handle SQL execution (add your SQL execution logic here)
-      return this.executeLocalRequest({ code }, storeJson);
+    // Regular expression to detect magic commands between %
+    const magicMatch = code.match(/^%([^%]+)%/);
+    let storeJson: { variableName: string } | undefined = undefined;
+    if (magicMatch) {
+      const magicCommand = magicMatch[1].trim();
+      code = code.replace(/^%([^%]+)%/, '').trim();
+      if (magicCommand.startsWith('python')) {
+        await this.handleRunPython(code);
+        return {
+          status: 'ok',
+          execution_count: this.executionCount,
+          user_expressions: {}
+        };
+      } else if (magicCommand.startsWith('export')) {
+        // This is a special case schenario where these parameters will be used in LangDB execution.
+        const exportMatch = magicCommand.match(/^export\s+(\w+)?/);
+        if (exportMatch) {
+          storeJson = { variableName: exportMatch[1] };
+          code = code.replace(/^%export\s+\w*/, '').trim();
+        } else {
+          throw new Error(
+            'variable name not found: export should follow by variable name'
+          );
+        }
+      }
     }
+
+    // Handle SQL execution (add your SQL execution logic here)
+    return this.executeLocalRequest({ code }, storeJson);
   }
+
   private async getPythonKernel(): Promise<IKernel> {
     if (this.pythonKernel) {
       return this.pythonKernel;
@@ -130,18 +146,30 @@ export class LangdbKernel extends BaseKernel {
       location: ''
     });
     this.pythonKernel = kernel;
+    // Initialize preset libraries only once
+    await this.initPythonLibraries(kernel);
     return kernel;
+  }
+
+  private async initPythonLibraries(kernel: IKernel): Promise<void> {
+    const libraries = ['pandas as pd', 'json'];
+    const importStatements = libraries.map(lib => `import ${lib}`).join('\n');
+    try {
+      await this.executeInPythonKernel(kernel, importStatements);
+    } catch (e: any) {
+      console.error('Failed to initialize Python libraries:', e);
+    }
   }
 
   private async handleRunPython(code: string): Promise<void> {
     const pythonCode = code.replace('%python', '').trim();
-    let completePythonCode = pythonCode;
-    if (this.storedJson) {
-      completePythonCode = `import json\nimport pandas as pd\njson_data = ${this.storedJson}\ndf = pd.DataFrame(json_data)\n${pythonCode}`;
-    }
+    // let completePythonCode = pythonCode;
+    // if (this.variables.size > 0) {
+    //   completePythonCode = `import json\nimport pandas as pd\njson_data = ${this.storedJson}\ndf = pd.DataFrame(json_data)\n${pythonCode}`;
+    // }
     try {
       const kernel = await this.getPythonKernel();
-      await this.executeInPythonKernel(kernel, completePythonCode);
+      await this.executeInPythonKernel(kernel, pythonCode);
     } catch (e: any) {
       const error = {
         ename: e.name,
@@ -178,7 +206,7 @@ export class LangdbKernel extends BaseKernel {
    */
   async executeLocalRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
-    storeJson: boolean
+    storeJson?: { variableName: string }
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
     console.debug('Starting execution of code');
@@ -251,9 +279,7 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         };
       }
-      if (storeJson) {
-        this.storedJson = jsonResponse;
-      }
+
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
         const model_name = jsonResponse.model_name || null;
@@ -286,15 +312,34 @@ export class LangdbKernel extends BaseKernel {
         throw new Error(jsonResponse.exception);
       }
 
-      const html = toHtml(jsonResponse);
-      console.debug(`DataFrame created with ${jsonResponse.data.length} rows`);
-      this.publishExecuteResult({
-        execution_count: this.executionCount,
-        data: {
-          'text/html': html
-        },
-        metadata: { trace: traceId }
-      });
+      if (storeJson) {
+        // this.variables.set(variableName, jsonResponse.data);
+        console.log('variableName', storeJson.variableName, jsonResponse.data);
+        await this.exportPythonVariables(
+          storeJson.variableName,
+          jsonResponse.data
+        );
+
+        this.publishExecuteResult({
+          execution_count: this.executionCount,
+          data: {
+            'text/html': `Variable ${storeJson.variableName} exported`
+          },
+          metadata: {}
+        });
+      } else {
+        const html = toHtml(jsonResponse);
+        console.debug(
+          `DataFrame created with ${jsonResponse.data.length} rows`
+        );
+        this.publishExecuteResult({
+          execution_count: this.executionCount,
+          data: {
+            'text/html': html
+          },
+          metadata: { trace: traceId }
+        });
+      }
 
       return {
         status,
@@ -316,6 +361,14 @@ export class LangdbKernel extends BaseKernel {
         traceback: []
       };
     }
+  }
+
+  async exportPythonVariables(variableName: string, data: object) {
+    const code = `${variableName} = pd.DataFrame(json.loads('${JSON.stringify(
+      data
+    )}'))`;
+    console.log(code);
+    await this.handleRunPython(code);
   }
   // Method to handle streaming response
   async handleStreamResponse(
