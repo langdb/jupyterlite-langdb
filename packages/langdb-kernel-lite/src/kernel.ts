@@ -209,8 +209,6 @@ export class LangdbKernel extends BaseKernel {
     storeJson?: { variableName: string }
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
-    console.debug('Starting execution of code');
-    console.debug(`Original code: ${code}`);
 
     try {
       const auth = await requestSession();
@@ -247,9 +245,13 @@ export class LangdbKernel extends BaseKernel {
         status = 'error';
       }
       const traceId = response.headers.get('x-trace-id');
-      if (traceId) {
+      const modelName = response.headers.get('x-model-name');
+      if (traceId && modelName) {
         // send NewTrace to parent
-        window.parent.postMessage({ type: 'NewTraceResponse', response }, '*');
+        window.parent.postMessage(
+          { type: 'NewTraceResponse', response: { traceId, modelName } },
+          '*'
+        );
         this.displayData({
           data: {
             'text/plain': ''

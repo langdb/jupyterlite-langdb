@@ -128,7 +128,7 @@ class TraceUIWIdget extends Widget {
     const outputs = cell.model.outputs;
     if (outputs) {
       let node = cell.node.querySelector(`.${TRACING_UI_CLASS}`);
-      const trace_id = outputs.get(index).metadata['trace'];
+      const trace_id = outputs.get(index)?.metadata['trace'];
       if (!trace_id) {
         return;
       }
