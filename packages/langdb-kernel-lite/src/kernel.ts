@@ -1,5 +1,8 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
+import {EventSourceMessage } from "@microsoft/fetch-event-source";
+import {getBytes, getLines, getMessages} from "@microsoft/fetch-event-source/lib/cjs/parse";
+
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
@@ -209,8 +212,6 @@ export class LangdbKernel extends BaseKernel {
     storeJson?: { variableName: string }
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
-    console.debug('Starting execution of code');
-    console.debug(`Original code: ${code}`);
 
     try {
       const auth = await requestSession();
@@ -247,7 +248,13 @@ export class LangdbKernel extends BaseKernel {
         status = 'error';
       }
       const traceId = response.headers.get('x-trace-id');
-      if (traceId) {
+      const modelName = response.headers.get('x-model-name');
+      if (traceId && modelName) {
+        // send NewTrace to parent
+        window.parent.postMessage(
+          { type: 'NewTraceResponse', response: { traceId, modelName } },
+          '*'
+        );
         this.displayData({
           data: {
             'text/plain': ''
@@ -256,8 +263,14 @@ export class LangdbKernel extends BaseKernel {
         });
       }
       const contentType = response.headers.get('content-type') || '';
+      const onmessage = (msg: EventSourceMessage) => {
+        this.stream({ name: 'stdout', text: msg.data });
+      };
+
       if (contentType.includes('text/event-stream')) {
-        return this.handleStreamResponse(response);
+        await getBytes(response.body!, getLines(getMessages(_id => {}, _retry => {}, onmessage)));
+
+        return this.createSuccessResponse();
       }
       let jsonResponse;
       const rawResponse = await response.text();
