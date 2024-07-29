@@ -30,7 +30,8 @@
   "dependencies": {
     "@jupyterlab/services": "^7.2.1",
     "@jupyterlite/kernel": "^0.3.0",
-    "@jupyterlite/server": "^0.3.0"
+    "@jupyterlite/server": "^0.3.0",
+    "@microsoft/fetch-event-source": "^2.0.1"
   },
   "resolutions": {
     "@jupyterlab/services/ws": "8.12.0",
