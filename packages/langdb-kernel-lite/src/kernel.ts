@@ -1,5 +1,8 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
+import {EventSourceMessage } from "@microsoft/fetch-event-source";
+import {getBytes, getLines, getMessages} from "@microsoft/fetch-event-source/lib/cjs/parse";
+
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
 export type AuthResponse = {
@@ -260,8 +263,14 @@ export class LangdbKernel extends BaseKernel {
         });
       }
       const contentType = response.headers.get('content-type') || '';
+      const onmessage = (msg: EventSourceMessage) => {
+        this.stream({ name: 'stdout', text: msg.data });
+      };
+
       if (contentType.includes('text/event-stream')) {
-        return this.handleStreamResponse(response);
+        await getBytes(response.body!, getLines(getMessages(_id => {}, _retry => {}, onmessage)));
+
+        return this.createSuccessResponse();
       }
       let jsonResponse;
       const rawResponse = await response.text();
