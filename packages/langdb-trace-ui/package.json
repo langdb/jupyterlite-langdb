@@ -34,19 +34,11 @@
         "build:lib:prod": "tsc",
         "clean": "yarn clean:lib",
         "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-        "clean:lintcache": "rimraf .eslintcache .stylelintcache",
         "clean:labextension": "rimraf langdb_trace_ui/labextension langdb_trace_ui/_version.py",
         "clean:all": "yarn clean:lib && yarn clean:labextension && yarn clean:lintcache",
         "eslint": "yarn eslint:check --fix",
         "eslint:check": "eslint . --cache --ext .ts,.tsx",
         "install:extension": "yarn build",
-        "lint": "yarn stylelint && yarn prettier && yarn eslint",
-        "lint:check": "yarn stylelint:check && yarn prettier:check && yarn eslint:check",
-        "prettier": "yarn prettier:base --write --list-different",
-        "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
-        "prettier:check": "yarn prettier:base --check",
-        "stylelint": "yarn stylelint:check --fix",
-        "stylelint:check": "stylelint --cache \"style/**/*.css\"",
         "watch": "run-p watch:src watch:labextension",
         "watch:src": "tsc -w --sourceMap",
         "watch:labextension": "jupyter labextension watch ."
@@ -62,11 +54,7 @@
         "@jupyterlab/outputarea": "^4.2.3",
         "@jupyterlab/rendermime": "^4.2.3",
         "@jupyterlab/ui-components": "^4.2.3",
-        "@lumino/widgets": "^2.0.0-rc.1",
-        "@melloware/react-logviewer": "^5.1.1",
-        "@microsoft/fetch-event-source": "^2.0.1",
-        "@types/immutable": "^3.8.7",
-        "@types/react-window": "^1.8.8"
+        "@lumino/widgets": "^2.0.0-rc.1"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
@@ -84,11 +72,6 @@
         "rimraf": "^5.0.1",
         "source-map-loader": "^1.0.2",
         "style-loader": "^3.3.1",
-        "stylelint": "^15.10.1",
-        "stylelint-config-recommended": "^13.0.0",
-        "stylelint-config-standard": "^34.0.0",
-        "stylelint-csstree-validator": "^3.0.0",
-        "stylelint-prettier": "^4.0.0",
         "typescript": "~5.0.2",
         "yjs": "^13.5.0"
     },
@@ -109,90 +92,5 @@
         "dist",
         "coverage",
         "**/*.d.ts"
-    ],
-    "eslintConfig": {
-        "extends": [
-            "eslint:recommended",
-            "plugin:@typescript-eslint/eslint-recommended",
-            "plugin:@typescript-eslint/recommended",
-            "plugin:prettier/recommended"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "parserOptions": {
-            "project": "tsconfig.json",
-            "sourceType": "module"
-        },
-        "plugins": [
-            "@typescript-eslint"
-        ],
-        "rules": {
-            "@typescript-eslint/naming-convention": [
-                "error",
-                {
-                    "selector": "interface",
-                    "format": [
-                        "PascalCase"
-                    ],
-                    "custom": {
-                        "regex": "^I[A-Z]",
-                        "match": true
-                    }
-                }
-            ],
-            "@typescript-eslint/no-unused-vars": [
-                "warn",
-                {
-                    "args": "none"
-                }
-            ],
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-namespace": "off",
-            "@typescript-eslint/no-use-before-define": "off",
-            "@typescript-eslint/quotes": [
-                "error",
-                "single",
-                {
-                    "avoidEscape": true,
-                    "allowTemplateLiterals": false
-                }
-            ],
-            "curly": [
-                "error",
-                "all"
-            ],
-            "eqeqeq": "error",
-            "prefer-arrow-callback": "error"
-        }
-    },
-    "prettier": {
-        "singleQuote": true,
-        "trailingComma": "none",
-        "arrowParens": "avoid",
-        "endOfLine": "auto",
-        "overrides": [
-            {
-                "files": "package.json",
-                "options": {
-                    "tabWidth": 4
-                }
-            }
-        ]
-    },
-    "stylelint": {
-        "extends": [
-            "stylelint-config-recommended",
-            "stylelint-config-standard",
-            "stylelint-prettier/recommended"
-        ],
-        "plugins": [
-            "stylelint-csstree-validator"
-        ],
-        "rules": {
-            "csstree/validator": true,
-            "property-no-vendor-prefix": null,
-            "selector-class-pattern": "^([a-z][A-z\\d]*)(-[A-z\\d]+)*$",
-            "selector-no-vendor-prefix": null,
-            "value-no-vendor-prefix": null
-        }
-    }
+    ]
 }

@@ -18,7 +18,7 @@
   box-shadow: none;
 }
 
-.langdb-tracing-toolbar  button.jp-ToolbarButtonComponent {
+.langdb-tracing-toolbar button.jp-ToolbarButtonComponent {
   cursor: pointer;
 }
 
@@ -27,12 +27,12 @@
 }
 
 .langdb-tracing-popover {
-    width: max-content;
-    max-width: calc(100vw - 20px);
-    background-color: white;
-    border: 1px solid #ddd;
-    font-size: 90%;
-    padding: 4px 8px;
-    border-radius: 4px;
-    text-align: left;
+  width: max-content;
+  max-width: calc(100vw - 20px);
+  background-color: white;
+  border: 1px solid #ddd;
+  font-size: 90%;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: left;
 }

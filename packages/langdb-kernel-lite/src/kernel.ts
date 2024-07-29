@@ -248,6 +248,8 @@ export class LangdbKernel extends BaseKernel {
       }
       const traceId = response.headers.get('x-trace-id');
       if (traceId) {
+        // send NewTrace to parent
+        window.parent.postMessage({ type: 'NewTraceResponse', response }, '*');
         this.displayData({
           data: {
             'text/plain': ''
