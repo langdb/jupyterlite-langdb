@@ -1,7 +1,7 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
-import {EventSourceMessage } from "@microsoft/fetch-event-source";
-import {getBytes, getLines, getMessages} from "@microsoft/fetch-event-source/lib/cjs/parse";
+import { EventSourceMessage } from "@microsoft/fetch-event-source";
+import { getBytes, getLines, getMessages } from "@microsoft/fetch-event-source/lib/cjs/parse";
 
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
@@ -268,7 +268,16 @@ export class LangdbKernel extends BaseKernel {
       };
 
       if (contentType.includes('text/event-stream')) {
-        await getBytes(response.body!, getLines(getMessages(_id => {}, _retry => {}, onmessage)));
+        await getBytes(
+          response.body!,
+          getLines(
+            getMessages(
+              _id => { },
+              _retry => { },
+              onmessage
+            )
+          )
+        );
 
         return this.createSuccessResponse();
       }
@@ -276,7 +285,6 @@ export class LangdbKernel extends BaseKernel {
       const rawResponse = await response.text();
       try {
         jsonResponse = JSON.parse(rawResponse);
-        console.log('jsonResponse', jsonResponse);
       } catch (e: any) {
         console.warn('JSON parsing failed, returning raw response');
         this.publishExecuteResult({
@@ -327,7 +335,6 @@ export class LangdbKernel extends BaseKernel {
 
       if (storeJson) {
         // this.variables.set(variableName, jsonResponse.data);
-        console.log('variableName', storeJson.variableName, jsonResponse.data);
         await this.exportPythonVariables(
           storeJson.variableName,
           jsonResponse.data
@@ -380,81 +387,14 @@ export class LangdbKernel extends BaseKernel {
     const code = `${variableName} = pd.DataFrame(json.loads('${JSON.stringify(
       data
     )}'))`;
-    console.log(code);
     await this.handleRunPython(code);
   }
-  // Method to handle streaming response
-  async handleStreamResponse(
-    response: Response
-  ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
-    return new Promise<KernelMessage.IExecuteReplyMsg['content']>(
-      (resolve, reject) => {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          const errorMsg = 'No reader available on response body';
-          console.error(errorMsg);
-          reject(this.createErrorResponse(errorMsg));
-          return;
-        }
-
-        const decoder = new TextDecoder('utf-8');
-
-        // Function to process each chunk
-        const processChunk = async ({
-          done,
-          value
-        }: ReadableStreamReadResult<Uint8Array>) => {
-          if (done) {
-            console.log('Stream ended');
-            resolve(this.createSuccessResponse());
-            return;
-          }
-
-          try {
-            const chunk = decoder.decode(value, { stream: true });
-            console.log('Received data chunk:', chunk);
-            this.stream({ name: 'stdout', text: chunk });
-
-            // Read the next chunk
-            reader.read().then(processChunk).catch(handleError);
-          } catch (error) {
-            handleError(error);
-          }
-        };
-
-        // Function to handle errors
-        const handleError = (error: any) => {
-          console.error('Stream error:', error);
-          this.stream({ name: 'stderr', text: error.message });
-          reject(this.createErrorResponse(error.message, error.name));
-        };
-
-        // Read the first chunk
-        reader.read().then(processChunk).catch(handleError);
-      }
-    );
-  }
-
   // Helper method to create a success response
   private createSuccessResponse(): KernelMessage.IExecuteReplyMsg['content'] {
     return {
       status: 'ok',
       execution_count: this.executionCount,
       user_expressions: {}
-    };
-  }
-
-  // Helper method to create an error response
-  private createErrorResponse(
-    errorMessage: string,
-    errorName: string = ''
-  ): KernelMessage.IExecuteReplyMsg['content'] {
-    return {
-      status: 'error',
-      ename: errorName,
-      evalue: errorMessage,
-      execution_count: this.executionCount,
-      traceback: []
     };
   }
 
