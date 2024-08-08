@@ -1,7 +1,11 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { BaseKernel, IKernel, IKernelSpecs } from '@jupyterlite/kernel';
-import { EventSourceMessage } from "@microsoft/fetch-event-source";
-import { getBytes, getLines, getMessages } from "@microsoft/fetch-event-source/lib/cjs/parse";
+import { EventSourceMessage } from '@microsoft/fetch-event-source';
+import {
+  getBytes,
+  getLines,
+  getMessages
+} from '@microsoft/fetch-event-source/lib/cjs/parse';
 
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
@@ -27,6 +31,30 @@ function requestSession(): Promise<AuthResponse> {
       window.removeEventListener('message', messageHandler);
       reject(new Error('Session request timed out'));
     }, 2000); // 5 seconds timeout
+  });
+}
+export interface RenderEvent {
+  render: boolean;
+  type: string;
+  value: string;
+}
+
+function requestRender(render: RenderEvent): Promise<string | null> {
+  return new Promise((resolve, reject) => {
+    const messageHandler = (event: any) => {
+      if (event.data.type === 'RenderResponse') {
+        window.removeEventListener('message', messageHandler);
+        console.log(event.data);
+        resolve(event.data.data);
+      }
+    };
+    window.addEventListener('message', messageHandler);
+    window.parent.postMessage({ type: 'RenderRequest', data: render }, '*');
+
+    setTimeout(() => {
+      window.removeEventListener('message', messageHandler);
+      reject(new Error('Render request timed out'));
+    }, 5000); // 1 second timeout
   });
 }
 
@@ -249,19 +277,7 @@ export class LangdbKernel extends BaseKernel {
       }
       const traceId = response.headers.get('x-trace-id');
       const modelName = response.headers.get('x-model-name');
-      if (traceId && modelName) {
-        // send NewTrace to parent
-        window.parent.postMessage(
-          { type: 'NewTraceResponse', response: { traceId, modelName } },
-          '*'
-        );
-        this.displayData({
-          data: {
-            'text/plain': ''
-          },
-          metadata: { trace: traceId }
-        });
-      }
+      const metadata = { traceId, modelName };
       const contentType = response.headers.get('content-type') || '';
       const onmessage = (msg: EventSourceMessage) => {
         this.stream({ name: 'stdout', text: msg.data });
@@ -272,8 +288,12 @@ export class LangdbKernel extends BaseKernel {
           response.body!,
           getLines(
             getMessages(
-              _id => { },
-              _retry => { },
+              _id => {
+                return;
+              },
+              _retry => {
+                return;
+              },
               onmessage
             )
           )
@@ -300,7 +320,21 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         };
       }
-
+      // Render will be hijacked
+      if (jsonResponse.render) {
+        const render = await requestRender(jsonResponse);
+        console.log('render', render);
+        if (render) {
+          this.publishExecuteResult({
+            execution_count: this.executionCount,
+            data: {
+              'text/html': render
+            },
+            metadata: {}
+          });
+        }
+        return this.createSuccessResponse();
+      }
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
         const model_name = jsonResponse.model_name || null;
@@ -321,12 +355,7 @@ export class LangdbKernel extends BaseKernel {
         }
         window.parent.postMessage({ type: 'RefreshChat' }, '*');
 
-        return {
-          status: 'ok',
-          execution_count: this.executionCount,
-          payload: [],
-          user_expressions: {}
-        };
+        return this.createSuccessResponse();
       }
 
       if (jsonResponse.exception) {
@@ -348,7 +377,7 @@ export class LangdbKernel extends BaseKernel {
           metadata: {}
         });
       } else {
-        const html = toHtml(jsonResponse);
+        const html = toHtml(jsonResponse, metadata as Metadata);
         console.debug(
           `DataFrame created with ${jsonResponse.data.length} rows`
         );
@@ -357,7 +386,7 @@ export class LangdbKernel extends BaseKernel {
           data: {
             'text/html': html
           },
-          metadata: { trace: traceId }
+          metadata: {}
         });
       }
 
@@ -496,36 +525,91 @@ interface ClickhouseResponse {
   data: Record<string, any>[];
   meta: Column[];
 }
+const getTraceHtml = ({ traceId, modelName }: Metadata): [string, string] => {
+  modelName = modelName || '';
+  const onclick = `
+    <script>
+      document.querySelectorAll('[data-trace-id="${traceId}"]').forEach(element => {
+        element.onclick = function() {
+          console.log("clicked");
+          window.parent.postMessage(
+            { type: 'OpenTrace', traceId: '${traceId}', modelName: '${modelName}'},
+            '*'
+          );
+          return false;
+        };
+      });
+    </script>
+  `;
+  const html = `
+    <style>
+      .trace-id {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+      }
+      .trace-id span.trace {
+        margin-left: 5px;
+        margin-right: 5px;
 
-const toHtml = (jsonData: ClickhouseResponse): string => {
+      }
+      .trace-id span.open {
+        cursor: pointer;
+        text-decoration: underline;
+        color: rgb(176 72 140);
+      }
+        
+    </style>
+    <div class="trace-id">
+      Trace ID: <span class="trace"> ${traceId}</span> 
+      <span class="open" data-trace-id="${traceId}">Open</span>
+    </div>
+  `;
+
+  return [html, onclick];
+};
+
+type Metadata = {
+  traceId?: string;
+  modelName?: string;
+};
+const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
   const data = jsonData.data;
   // Check if the input data is an array and has elements
   if (!Array.isArray(data) || data.length === 0) {
     return '<p>No data available to display</p>';
   }
 
+  let html = '';
+  let script = 's';
+  if (metadata.traceId) {
+    const [h, s] = getTraceHtml(metadata);
+    html = h;
+    script = s;
+  }
+
   // Create the table and the table header
-  let table = '<table border="1"><thead><tr>';
+  html += '<table border="1"><thead><tr>';
 
   // Get the headers from the keys of the first object in the array
   jsonData.meta.forEach(col => {
-    table += `<th>${col.name}</th>`;
+    html += `<th>${col.name}</th>`;
   });
 
-  table += '</tr></thead><tbody>';
+  html += '</tr></thead><tbody>';
 
   // Add rows
   jsonData.data.forEach(row => {
-    table += '<tr>';
+    html += '<tr>';
     jsonData.meta.forEach(col => {
       let val = row[col.name];
       val = typeof val === 'object' ? JSON.stringify(row[col.name]) : val;
-      table += `<td>${val}</td>`;
+      html += `<td>${val}</td>`;
     });
-    table += '</tr>';
+    html += '</tr>';
   });
 
-  table += '</tbody></table>';
-
-  return table;
+  html += '</tbody></table>';
+  html += script;
+  return html;
 };
