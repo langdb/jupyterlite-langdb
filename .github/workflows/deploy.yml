@@ -64,7 +64,7 @@ jobs:
 
       - name: Deploy jupyterlite to bucket
         if: github.ref == 'refs/heads/main'
-        run: aws s3 sync ./dist s3://app.dev.langdb.ai/jupyterlite
+        run: aws s3 sync ./dist s3://jupyterlite-dist
 
 #      - name: Invalidate pulse cloudfront
 #        if: github.ref == 'refs/heads/main'
