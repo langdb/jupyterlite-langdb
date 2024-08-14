@@ -413,9 +413,14 @@ export class LangdbKernel extends BaseKernel {
   }
 
   async exportPythonVariables(variableName: string, data: object) {
-    const code = `${variableName} = pd.DataFrame(json.loads('${JSON.stringify(
-      data
-    )}'))`;
+    const escapedData = JSON.stringify(data)
+      .replace(/\\/g, '\\\\') // Escape backslashes
+      .replace(/"/g, '\\"') // Escape double quotes
+      .replace(/'/g, "\\'") // Escape single quotes
+      .replace(/\n/g, '\\n') // Escape newlines
+      .replace(/\t/g, '\\t') // Escape tabs
+      .replace(/\r/g, '\\r'); // Escape carriage returns
+    const code = `${variableName} = pd.DataFrame(json.loads("${escapedData}"))`;
     await this.handleRunPython(code);
   }
   // Helper method to create a success response
@@ -603,7 +608,17 @@ const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
     html += '<tr>';
     jsonData.meta.forEach(col => {
       let val = row[col.name];
-      val = typeof val === 'object' ? JSON.stringify(row[col.name]) : val;
+
+      val =
+        typeof val === 'object'
+          ? JSON.stringify(val)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;')
+          : val;
+
       html += `<td>${val}</td>`;
     });
     html += '</tr>';
