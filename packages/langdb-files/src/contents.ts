@@ -2,6 +2,7 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import IDrive = Contents.IDrive;
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { RemoteNotebook } from './remote';
 export interface IAuthResponse {
   token?: string;
   appId: string;
@@ -16,27 +17,14 @@ export interface IFileMetadata {
   readonly: boolean;
 }
 
-export interface IFileNotebookResponse {
-  notebook: object;
-  metadata: IFileMetadata;
-}
-
 // Define the NotebookRequestType enum
 export enum NotebookRequestType {
-  AuthRequest = 'AuthRequest',
-  FileRequest = 'FileRequest',
-  SaveFileRequest = 'SaveFileRequest'
+  AuthRequest = 'AuthRequest'
 }
 
 // Define the NotebookResponseType enum
 export enum NotebookResponseType {
-  AuthResponse = 'AuthResponse',
-  FileResponse = 'FileResponse',
-  SaveFileResponse = 'SaveFileResponse'
-}
-export interface ISaveNotebookRequest {
-  appId: string;
-  body: string;
+  AuthResponse = 'AuthResponse'
 }
 
 export interface IParentNotebookResponse {
@@ -44,19 +32,11 @@ export interface IParentNotebookResponse {
   data: object;
   readonly: boolean;
 }
-export interface ISaveFileRequest {
-  appId: string;
-  body: object;
-}
 
 const getResponseType = (type: NotebookRequestType): NotebookResponseType => {
   switch (type) {
     case NotebookRequestType.AuthRequest:
       return NotebookResponseType.AuthResponse;
-    case NotebookRequestType.FileRequest:
-      return NotebookResponseType.FileResponse;
-    case NotebookRequestType.SaveFileRequest:
-      return NotebookResponseType.SaveFileResponse;
   }
 };
 
@@ -163,30 +143,37 @@ export class LangdbDrive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     const response = await requestParent({
-      type: NotebookRequestType.FileRequest,
+      type: NotebookRequestType.AuthRequest,
       msg: {}
     });
-    const data = response.data as IFileNotebookResponse;
 
+    const authResponse = response.data as IAuthResponse;
+    if (!authResponse?.metadata) {
+      throw new Error('metadata is missing');
+    }
+    const remote = new RemoteNotebook(authResponse);
+    const notebook = await remote.getFile();
+    console.log(notebook);
     // check if result is json object
-    const result_string = JSON.stringify(data.notebook);
+    const result_string = JSON.stringify(notebook);
     const display_content = JSON.parse(result_string);
+    console.log(display_content);
     const contents: Contents.IModel = {
       type: 'notebook',
       format: 'json',
       path: `${path}.ipynb`,
       name: `${path}.ipynb`,
       content: display_content,
-      created: data.metadata.created,
+      created: authResponse.metadata.created,
       writable: !response.readonly,
-      last_modified: data.metadata.last_modified,
+      last_modified: authResponse.metadata.last_modified,
       size: result_string.length,
       mimetype: 'application/json'
     };
 
     this.checkpoints[path] = {
       id: path,
-      last_modified: data.metadata.last_modified
+      last_modified: authResponse.metadata.last_modified
     };
 
     return Promise.resolve(contents);
@@ -262,14 +249,23 @@ export class LangdbDrive implements Contents.IDrive {
     if (path.startsWith('https:/')) {
       return Promise.resolve(options as Contents.IModel);
     }
-    const appId = path.replace('.ipynb', '');
     try {
       const response = await requestParent({
-        type: NotebookRequestType.SaveFileRequest,
-        msg: { appId, body: options.content! } as ISaveFileRequest
+        type: NotebookRequestType.AuthRequest,
+        msg: {}
       });
+
+      const authResponse = response.data as IAuthResponse;
+      if (!authResponse?.metadata) {
+        throw new Error('metadata is missing');
+      }
+      if (!authResponse?.metadata) {
+        throw new Error('metadata is missing');
+      }
+      const remote = new RemoteNotebook(authResponse);
+      await remote.saveFile(options.content!);
       const model = options as LangdbFile;
-      model.writable = !response.readonly;
+      model.writable = !authResponse.metadata.readonly;
       return Promise.resolve(model);
     } catch (e: any) {
       console.error(e);
