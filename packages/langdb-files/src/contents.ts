@@ -48,7 +48,6 @@ function requestParent({
   type,
   msg
 }: ICallbackOptions): Promise<IParentNotebookResponse> {
-  console.log('type', type, 'msg', msg);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
       const expectedResponseType = getResponseType(type);
@@ -90,10 +89,10 @@ class LangdbFile implements Contents.IModel {
  */
 export class LangdbDrive implements Contents.IDrive {
   readonly serverSettings: ServerConnection.ISettings;
-  private checkpoints: Record<string, Contents.ICheckpointModel>;
+  private lastModified: string | undefined;
+  private updateCounter: number = 0;
   constructor(registry: DocumentRegistry) {
     this.serverSettings = ServerConnection.makeSettings();
-    this.checkpoints = {};
   }
 
   /**
@@ -153,11 +152,9 @@ export class LangdbDrive implements Contents.IDrive {
     }
     const remote = new RemoteNotebook(authResponse);
     const notebook = await remote.getFile();
-    console.log(notebook);
     // check if result is json object
     const result_string = JSON.stringify(notebook);
     const display_content = JSON.parse(result_string);
-    console.log(display_content);
     const contents: Contents.IModel = {
       type: 'notebook',
       format: 'json',
@@ -171,10 +168,9 @@ export class LangdbDrive implements Contents.IDrive {
       mimetype: 'application/json'
     };
 
-    this.checkpoints[path] = {
-      id: path,
-      last_modified: authResponse.metadata.last_modified
-    };
+    if (!this.lastModified) {
+      this.lastModified = authResponse.metadata.last_modified;
+    }
 
     return Promise.resolve(contents);
   }
@@ -296,8 +292,10 @@ export class LangdbDrive implements Contents.IDrive {
    *   checkpoint is created.
    */
   async createCheckpoint(path: string): Promise<Contents.ICheckpointModel> {
-    const checkpoint = this.checkpoints[path];
-    return Promise.resolve(checkpoint);
+    return Promise.resolve({
+      id: `${this.updateCounter++}`,
+      last_modified: new Date().toString()
+    });
   }
 
   /**
