@@ -9,19 +9,25 @@ import {
 
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
-export type AuthResponse = {
+export interface IFileMetadata {
+  fileUrl: string;
+  created: string;
+  last_modified: string;
+  readonly: boolean;
+}
+export interface IAuthResponse {
   token?: string;
   appId: string;
   apiUrl: string;
-  publicApp?: boolean;
-  isSample?: boolean;
-};
-function requestSession(): Promise<AuthResponse> {
+  metadata?: IFileMetadata;
+  isAuthenticated: boolean;
+}
+function requestSession(): Promise<IAuthResponse> {
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
       if (event.data.type === 'AuthResponse') {
         window.removeEventListener('message', messageHandler);
-        resolve(event.data.msg);
+        resolve(event.data.data);
       }
     };
     window.addEventListener('message', messageHandler);
@@ -44,7 +50,6 @@ function requestRender(render: RenderEvent): Promise<string | null> {
     const messageHandler = (event: any) => {
       if (event.data.type === 'RenderResponse') {
         window.removeEventListener('message', messageHandler);
-        console.log(event.data);
         resolve(event.data.data);
       }
     };
@@ -58,15 +63,11 @@ function requestRender(render: RenderEvent): Promise<string | null> {
   });
 }
 
-const getHeaders = (auth: AuthResponse): Headers => {
+const getHeaders = (auth: IAuthResponse): Headers => {
   const headers = new Headers();
   headers.set('Content-Type', 'application/json');
-  if (auth.publicApp) {
-    headers.set('X-PUBLIC-APPLICATION-ID', auth?.appId);
-  } else {
-    headers.set('Authorization', `Bearer ${auth?.token}`);
-  }
 
+  headers.set('Authorization', `Bearer ${auth?.token}`);
   return headers;
 };
 /**
@@ -242,11 +243,8 @@ export class LangdbKernel extends BaseKernel {
     const { code } = content;
 
     try {
-      const auth = await requestSession();
-      if (!auth) {
-        throw new Error('No auth data found');
-      }
-      if (auth.isSample) {
+      const authResponse = await requestSession();
+      if (!authResponse || authResponse.metadata?.readonly) {
         window.parent.postMessage({ type: 'OpenRequireCloneDialog' }, '*');
         return {
           status: 'abort',
@@ -254,16 +252,16 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         } as KernelMessage.IExecuteReplyMsg['content'];
       }
-      const apiUrl = auth?.apiUrl || LANGDB_API_URL;
+
+      const apiUrl = authResponse?.apiUrl || LANGDB_API_URL;
       const queryUrl = `${apiUrl}/query`;
       const response = await fetch(queryUrl, {
         method: 'POST',
-        headers: getHeaders(auth),
+        headers: getHeaders(authResponse),
         body: JSON.stringify({ query: code, trace: true })
       });
       let status = 'ok';
       if (response.status >= 200 && response.status < 300) {
-        console.debug('POST request successful');
         status = 'ok';
         if (
           code.toLowerCase().startsWith('create ') ||
@@ -323,7 +321,6 @@ export class LangdbKernel extends BaseKernel {
       // Render will be hijacked
       if (jsonResponse.render) {
         const render = await requestRender(jsonResponse);
-        console.log('render', render);
         if (render) {
           this.publishExecuteResult({
             execution_count: this.executionCount,
@@ -338,11 +335,12 @@ export class LangdbKernel extends BaseKernel {
       if (code.toLowerCase().startsWith('chat')) {
         const params = jsonResponse.params || null;
         const model_name = jsonResponse.model_name || null;
-        const server_url = jsonResponse.server_url || `${auth.apiUrl}/stream`;
-        const chatUrl = `${apiUrl}/apps/${auth.appId}/chat`;
+        const server_url =
+          jsonResponse.server_url || `${authResponse.apiUrl}/stream`;
+        const chatUrl = `${apiUrl}/apps/${authResponse.appId}/chat`;
         await fetch(chatUrl, {
           method: 'POST',
-          headers: getHeaders(auth),
+          headers: getHeaders(authResponse),
           body: JSON.stringify({
             model_name,
             server_url,
@@ -378,9 +376,6 @@ export class LangdbKernel extends BaseKernel {
         });
       } else {
         const html = toHtml(jsonResponse, metadata as Metadata);
-        console.debug(
-          `DataFrame created with ${jsonResponse.data.length} rows`
-        );
         this.publishExecuteResult({
           execution_count: this.executionCount,
           data: {
@@ -609,16 +604,14 @@ const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
     jsonData.meta.forEach(col => {
       let val = row[col.name];
 
-      val =
-        typeof val === 'object'
-          ? JSON.stringify(val)
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#039;')
-          : val;
-
+      if (typeof val === 'object') {
+        val = JSON.stringify(val)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
       html += `<td>${val}</td>`;
     });
     html += '</tr>';

@@ -2,85 +2,89 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import IDrive = Contents.IDrive;
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import axios from 'axios';
-
-const LANGDB_API_URL = 'https://api.dev.langdb.ai';
-export type AuthResponse = {
-  token: string;
+export interface IAuthResponse {
+  token?: string;
+  appId: string;
   apiUrl: string;
-  publicApp?: boolean;
+  metadata?: IFileMetadata;
+  isAuthenticated: boolean;
+}
+export interface IFileMetadata {
+  fileUrl: string;
+  created: string;
+  last_modified: string;
+  readonly: boolean;
+}
+
+export interface IFileNotebookResponse {
+  notebook: object;
+  metadata: IFileMetadata;
+}
+
+// Define the NotebookRequestType enum
+export enum NotebookRequestType {
+  AuthRequest = 'AuthRequest',
+  FileRequest = 'FileRequest',
+  SaveFileRequest = 'SaveFileRequest'
+}
+
+// Define the NotebookResponseType enum
+export enum NotebookResponseType {
+  AuthResponse = 'AuthResponse',
+  FileResponse = 'FileResponse',
+  SaveFileResponse = 'SaveFileResponse'
+}
+export interface ISaveNotebookRequest {
+  appId: string;
+  body: string;
+}
+
+export interface IParentNotebookResponse {
+  type: string;
+  data: object;
+  readonly: boolean;
+}
+export interface ISaveFileRequest {
+  appId: string;
+  body: object;
+}
+
+const getResponseType = (type: NotebookRequestType): NotebookResponseType => {
+  switch (type) {
+    case NotebookRequestType.AuthRequest:
+      return NotebookResponseType.AuthResponse;
+    case NotebookRequestType.FileRequest:
+      return NotebookResponseType.FileResponse;
+    case NotebookRequestType.SaveFileRequest:
+      return NotebookResponseType.SaveFileResponse;
+  }
 };
 
-function requestSession(): Promise<AuthResponse> {
+export interface ICallbackOptions {
+  type: NotebookRequestType;
+  msg: object;
+}
+function requestParent({
+  type,
+  msg
+}: ICallbackOptions): Promise<IParentNotebookResponse> {
+  console.log('type', type, 'msg', msg);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
-      if (event.data.type === 'AuthResponse') {
+      const expectedResponseType = getResponseType(type);
+      if (event.data.type === expectedResponseType.toString()) {
         window.removeEventListener('message', messageHandler);
-        resolve(event.data.msg);
+        resolve(event.data);
       }
     };
     window.addEventListener('message', messageHandler);
-    window.parent.postMessage({ type: 'AuthRequest' }, '*');
+    window.parent.postMessage({ type: type.toString(), ...msg }, '*');
 
     setTimeout(() => {
       window.removeEventListener('message', messageHandler);
       reject(new Error('Session request timed out'));
     }, 2000); // 5 seconds timeout
   });
-}
-
-async function getFile(appId: string, auth: AuthResponse): Promise<any> {
-  try {
-    const apiUrl = auth?.apiUrl || LANGDB_API_URL;
-    const response = await axios.get(`${apiUrl}/apps/${appId}/file`, {
-      headers: getHeaders(auth, appId),
-      maxBodyLength: Infinity
-    });
-    // get response data as json
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching blob:', error);
-    throw error;
-  }
-}
-
-const getHeaders = (auth: AuthResponse, appId: string): Record<string, any> => {
-  const headers: Record<string, any> = { 'Content-Type': 'application/json' };
-  if (auth.publicApp) {
-    headers['X-PUBLIC-APPLICATION-ID'] = appId;
-  } else {
-    headers['Authorization'] = `Bearer ${auth?.token}`;
-  }
-
-  return headers;
-};
-
-async function saveFile(
-  appId: string,
-  content: any,
-  authSession: AuthResponse
-): Promise<any> {
-  try {
-    const auth = authSession;
-    const apiUrl = auth?.apiUrl || LANGDB_API_URL;
-    const blob = new Blob([JSON.stringify(content)], {
-      type: 'application/json'
-    });
-    const formData = new FormData();
-    formData.append('file', blob, 'file.ipynb');
-    const response = await axios.put(`${apiUrl}/apps/${appId}`, formData, {
-      headers: {
-        Authorization: `Bearer ${auth?.token}`,
-        'Content-Type': 'multipart/form-data'
-      },
-      maxBodyLength: Infinity
-    });
-    // get response data as json
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching blob:', error);
-    throw error;
-  }
 }
 
 class LangdbFile implements Contents.IModel {
@@ -106,9 +110,10 @@ class LangdbFile implements Contents.IModel {
  */
 export class LangdbDrive implements Contents.IDrive {
   readonly serverSettings: ServerConnection.ISettings;
-
+  private checkpoints: Record<string, Contents.ICheckpointModel>;
   constructor(registry: DocumentRegistry) {
     this.serverSettings = ServerConnection.makeSettings();
+    this.checkpoints = {};
   }
 
   /**
@@ -157,37 +162,14 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    if (path.startsWith('https:/')) {
-      // TODO: dont know why this is happening
-      const temp_path = path.replace(
-        'https:/raw.githubusercontent.com',
-        'https://raw.githubusercontent.com'
-      );
-      const response = await axios.get(temp_path);
-      // get last part of path
-      const parts = temp_path.split('/');
-      const name = parts[parts.length - 1];
-      const contents: Contents.IModel = {
-        type: 'notebook',
-        format: 'json',
-        path: name,
-        name: name,
-        content: response.data,
-        created: '',
-        writable: false,
-        last_modified: '',
-        size: response.data.length,
-        mimetype: 'application/json'
-      };
-      return Promise.resolve(contents);
-    }
-
-    const appId = path.replace('.ipynb', '');
-    const auth = await requestSession();
-    const result = await getFile(appId, auth);
+    const response = await requestParent({
+      type: NotebookRequestType.FileRequest,
+      msg: {}
+    });
+    const data = response.data as IFileNotebookResponse;
 
     // check if result is json object
-    const result_string = JSON.stringify(result);
+    const result_string = JSON.stringify(data.notebook);
     const display_content = JSON.parse(result_string);
     const contents: Contents.IModel = {
       type: 'notebook',
@@ -195,11 +177,16 @@ export class LangdbDrive implements Contents.IDrive {
       path: `${path}.ipynb`,
       name: `${path}.ipynb`,
       content: display_content,
-      created: '',
-      writable: !!auth.token,
-      last_modified: '',
+      created: data.metadata.created,
+      writable: !response.readonly,
+      last_modified: data.metadata.last_modified,
       size: result_string.length,
       mimetype: 'application/json'
+    };
+
+    this.checkpoints[path] = {
+      id: path,
+      last_modified: data.metadata.last_modified
     };
 
     return Promise.resolve(contents);
@@ -277,12 +264,12 @@ export class LangdbDrive implements Contents.IDrive {
     }
     const appId = path.replace('.ipynb', '');
     try {
-      const auth = await requestSession();
-      if (!auth.publicApp && auth.token) {
-        await saveFile(appId, options.content, auth);
-      }
+      const response = await requestParent({
+        type: NotebookRequestType.SaveFileRequest,
+        msg: { appId, body: options.content! } as ISaveFileRequest
+      });
       const model = options as LangdbFile;
-      model.writable = !auth.publicApp;
+      model.writable = !response.readonly;
       return Promise.resolve(model);
     } catch (e: any) {
       console.error(e);
@@ -313,11 +300,8 @@ export class LangdbDrive implements Contents.IDrive {
    *   checkpoint is created.
    */
   async createCheckpoint(path: string): Promise<Contents.ICheckpointModel> {
-    const emptyCheckpoint: Contents.ICheckpointModel = {
-      id: '',
-      last_modified: ''
-    };
-    return Promise.resolve(emptyCheckpoint);
+    const checkpoint = this.checkpoints[path];
+    return Promise.resolve(checkpoint);
   }
 
   /**
