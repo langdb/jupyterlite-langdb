@@ -1,5 +1,5 @@
 import { PanelLayout, Widget } from '@lumino/widgets';
-import { LangdbDrive } from './contents';
+import { LangdbDrive } from './drive';
 import { FileBrowser } from '@jupyterlab/filebrowser';
 
 export class RemoteCloudFileBrowser extends Widget {

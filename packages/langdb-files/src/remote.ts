@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { IAuthResponse, IFileMetadata } from './contents';
+import { IAuthResponse, IFileMetadata } from './drive';
 
 export class RemoteNotebook {
   authResponse: IAuthResponse;

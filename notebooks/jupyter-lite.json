@@ -6,6 +6,8 @@
     "enableMemoryStorage": true,
     "contentsStorageDrivers": [
       "langdb-files",
+      "langdb-drive",
+      "langdb-sdrive",
       "memoryStorageDriver"
     ],
     "settingsStorageDrivers": [

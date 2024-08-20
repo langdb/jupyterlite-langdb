@@ -7,8 +7,10 @@ export interface IAuthResponse {
   token?: string;
   appId: string;
   apiUrl: string;
+  socketUrl: string;
   metadata?: IFileMetadata;
   isAuthenticated: boolean;
+  user?: any;
 }
 export interface IFileMetadata {
   fileUrl: string;
@@ -44,7 +46,7 @@ export interface ICallbackOptions {
   type: NotebookRequestType;
   msg: object;
 }
-function requestParent({
+export function requestParent({
   type,
   msg
 }: ICallbackOptions): Promise<IParentNotebookResponse> {
@@ -242,6 +244,7 @@ export class LangdbDrive implements Contents.IDrive {
     path: string,
     options: Partial<Contents.IModel>
   ): Promise<Contents.IModel> {
+    console.log(' SAVE CALLED');
     if (path.startsWith('https:/')) {
       return Promise.resolve(options as Contents.IModel);
     }
@@ -252,16 +255,14 @@ export class LangdbDrive implements Contents.IDrive {
       });
 
       const authResponse = response.data as IAuthResponse;
-      if (!authResponse?.metadata) {
-        throw new Error('metadata is missing');
-      }
-      if (!authResponse?.metadata) {
-        throw new Error('metadata is missing');
+      const { metadata, isAuthenticated } = authResponse;
+      if (!metadata || metadata.readonly || !isAuthenticated) {
+        return Promise.resolve(options as Contents.IModel);
       }
       const remote = new RemoteNotebook(authResponse);
       await remote.saveFile(options.content!);
       const model = options as LangdbFile;
-      model.writable = !authResponse.metadata.readonly;
+      model.writable = !authResponse.metadata?.readonly || false;
       return Promise.resolve(model);
     } catch (e: any) {
       console.error(e);
