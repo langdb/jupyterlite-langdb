@@ -2,10 +2,15 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { LangdbDrive } from './contents';
+import { LangdbDrive } from './drive';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { Widget } from '@lumino/widgets';
+import { SharedDrive } from './shared';
+import {
+  EditorExtensionRegistry,
+  IEditorExtensionRegistry
+} from '@jupyterlab/codemirror';
+import { remoteUserCursors } from '@jupyter/collaboration';
 /**
  * Initialization data for the langdb-files extension.
  */
@@ -13,50 +18,71 @@ export type AuthResponse = {
   token: string;
   apiUrl: string;
 };
-const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'langdb-files:plugin',
+const ldrive: JupyterFrontEndPlugin<void> = {
+  id: 'langdb-drive:plugin',
   description: 'Langdb Files extension',
   autoStart: true,
   requires: [IDocumentManager, ISettingRegistry],
-  activate: (
-    app: JupyterFrontEnd,
-    manager: IDocumentManager,
-    settingRegistry: ISettingRegistry
-  ) => {
+  activate: (app: JupyterFrontEnd, manager: IDocumentManager) => {
     console.log('JupyterLab extension langdb-files is activated!');
 
     const { serviceManager } = app;
-
-    if (window.self !== window.top) {
-      // The application is not loaded as an iframe
-      // Add a widget to get login
-      // Assuming you have a function createLoginWidget that returns a widget for login
-      const loginWidget = createLoginWidget();
-      app.shell.add(loginWidget, 'login');
-    }
-
+    manager.autosave = true;
     const drive = new LangdbDrive(app.docRegistry);
     manager.services.contents.addDrive(drive);
     serviceManager.contents.addDrive(drive);
-
     console.log('Drive "ldrive" attached');
     window.parent.postMessage({ type: 'JupyterReady' }, '*');
   }
 };
 
-class LoginWidget extends Widget {
-  constructor() {
-    super();
-    this.addClass('my-LoginWidget');
-    this.id = 'login-widget-id';
-    this.title.label = 'Login';
-    this.title.closable = true;
-    this.node.textContent = 'Login Widget Placeholder';
+const sdrive: JupyterFrontEndPlugin<void> = {
+  id: 'langdb-sdrive:plugin',
+  description: 'Langdb Files extension',
+  autoStart: true,
+  requires: [IDocumentManager, ISettingRegistry],
+  activate: (app: JupyterFrontEnd, manager: IDocumentManager) => {
+    console.log('JupyterLab extension langdb-files is activated!');
+
+    const { serviceManager } = app;
+
+    manager.autosave = true;
+    // Add shared drive
+    const collabDrive = new SharedDrive(app.docRegistry);
+    manager.services.contents.addDrive(collabDrive);
+    serviceManager.contents.addDrive(collabDrive);
+    console.log('Drive "sdrive" attached');
+
+    window.parent.postMessage({ type: 'JupyterReady' }, '*');
   }
-}
+};
 
-function createLoginWidget(): LoginWidget {
-  return new LoginWidget();
-}
+const userEditorCursors: JupyterFrontEndPlugin<void> = {
+  id: '@jupyter/collaboration-extension:userEditorCursors',
+  description:
+    'Add CodeMirror extension to display remote user cursors and selections.',
+  autoStart: true,
+  requires: [IEditorExtensionRegistry],
+  activate: (
+    app: JupyterFrontEnd,
+    extensions: IEditorExtensionRegistry
+  ): void => {
+    extensions.addExtension({
+      name: 'remote-user-cursors',
+      factory(options) {
+        const { awareness, ysource: ytext } = options.model.sharedModel as any;
+        return EditorExtensionRegistry.createImmutableExtension(
+          remoteUserCursors({ awareness, ytext })
+        );
+      }
+    });
+  }
+};
 
-export default plugin;
+const plugins: JupyterFrontEndPlugin<any>[] = [
+  ldrive,
+  sdrive,
+  userEditorCursors
+];
+
+export default plugins;

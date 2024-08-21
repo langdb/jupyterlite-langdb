@@ -6,6 +6,8 @@
     "enableMemoryStorage": true,
     "contentsStorageDrivers": [
       "langdb-files",
+      "langdb-drive",
+      "langdb-sdrive",
       "memoryStorageDriver"
     ],
     "settingsStorageDrivers": [
@@ -13,6 +15,7 @@
     ],
     "disabledExtensions": [
       "@jupyterlab/application-extension:logo",
+      "@jupyter-notebook/notebook-extension:checkpoints",
       "@jupyter-notebook/application-extension:logo",
       "@jupyterlite/application-extension:logo",
       "@jupyterlite/notebook-application-extension:logo",
