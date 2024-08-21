@@ -45,9 +45,10 @@ export class SharedDrive extends LangdbDrive implements ICollaborativeDrive {
       // Use `Promise.all` to reject as soon as possible. The Context will
       // show a dialog to the user.
       const [model] = await Promise.all([
-        super.get(localPath, { ...options, content: false }),
+        super.getNotebook(localPath, true),
         provider.ready
       ]);
+      console.log('model', model);
       return model;
     }
 

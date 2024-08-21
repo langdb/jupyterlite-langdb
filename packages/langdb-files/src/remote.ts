@@ -7,7 +7,7 @@ export class RemoteNotebook {
   constructor(authResponse: IAuthResponse) {
     this.authResponse = authResponse;
   }
-  async getFile(): Promise<any> {
+  async getFile(dirty: boolean = false): Promise<any> {
     const { appId, apiUrl, metadata } = this.authResponse;
     if (!appId && !metadata) {
       return;
@@ -18,7 +18,10 @@ export class RemoteNotebook {
         return await this.getSample(fileUrl!);
       }
 
-      const notebookUrl = `${apiUrl}/apps/${appId}/file`;
+      let notebookUrl = `${apiUrl}/apps/${appId}/file`;
+      if (dirty) {
+        notebookUrl = `${apiUrl}/apps/${appId}/changes`;
+      }
       const response = await fetch(notebookUrl!, {
         method: 'GET',
         headers: await this.getHeaders()

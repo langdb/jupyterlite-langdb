@@ -103,11 +103,13 @@ export class WebSocketProvider implements IDocumentProvider {
   };
 
   private _onSync = (isSynced: boolean) => {
+    console.log('isSynced', isSynced);
     if (isSynced) {
       if (this._yWebsocketProvider) {
         this._yWebsocketProvider.off('sync', this._onSync);
 
         const state = this._sharedModel.ydoc.getMap('state');
+        console.log('state', state);
         state.set('document_id', this._yWebsocketProvider.roomname);
       }
       this._ready.resolve();

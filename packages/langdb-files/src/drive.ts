@@ -139,10 +139,7 @@ export class LangdbDrive implements Contents.IDrive {
    * @returns A promise which resolves with the file content.
    */
 
-  async get(
-    path: string,
-    options?: Contents.IFetchOptions
-  ): Promise<Contents.IModel> {
+  async getNotebook(path: string, dirty: boolean): Promise<Contents.IModel> {
     const response = await requestParent({
       type: NotebookRequestType.AuthRequest,
       msg: {}
@@ -153,28 +150,36 @@ export class LangdbDrive implements Contents.IDrive {
       throw new Error('metadata is missing');
     }
     const remote = new RemoteNotebook(authResponse);
-    const notebook = await remote.getFile();
+    const notebook = await remote.getFile(dirty);
     // check if result is json object
     const result_string = JSON.stringify(notebook);
     const display_content = JSON.parse(result_string);
     const contents: Contents.IModel = {
       type: 'notebook',
       format: 'json',
-      path: `${path}.ipynb`,
-      name: `${path}.ipynb`,
-      content: display_content,
+      path: `${path}`,
+      name: `${path}`,
       created: authResponse.metadata.created,
       writable: !response.readonly,
       last_modified: authResponse.metadata.last_modified,
-      size: result_string.length,
-      mimetype: 'application/json'
+      mimetype: 'application/json',
+      content: display_content,
+      size: result_string.length
     };
+
+    console.log('CONTENTS', contents);
 
     if (!this.lastModified) {
       this.lastModified = authResponse.metadata.last_modified;
     }
 
     return Promise.resolve(contents);
+  }
+  async get(
+    path: string,
+    options?: Contents.IFetchOptions
+  ): Promise<Contents.IModel> {
+    return this.getNotebook(path, false);
   }
 
   /**
