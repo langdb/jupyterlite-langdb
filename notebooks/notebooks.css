@@ -14,6 +14,10 @@
     top: 82px !important;
 }
 
-.jp-WindowedPanel-outer {
-    background-color: rgb(243,244,246) !important;
+body.jp-mod-theme-dark .jp-WindowedPanel-outer {
+    background-color: rgb(243, 244, 246) !important;
+}
+
+body.jp-mod-theme-light .jp-WindowedPanel-outer {
+    background-color: #171717 !important;
 }

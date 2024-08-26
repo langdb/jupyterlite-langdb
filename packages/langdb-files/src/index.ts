@@ -11,6 +11,7 @@ import {
   IEditorExtensionRegistry
 } from '@jupyterlab/codemirror';
 import { remoteUserCursors } from '@jupyter/collaboration';
+import { themeChangerPlugin } from './theme';
 /**
  * Initialization data for the langdb-files extension.
  */
@@ -82,7 +83,8 @@ const userEditorCursors: JupyterFrontEndPlugin<void> = {
 const plugins: JupyterFrontEndPlugin<any>[] = [
   ldrive,
   sdrive,
-  userEditorCursors
+  userEditorCursors,
+  themeChangerPlugin
 ];
 
 export default plugins;
