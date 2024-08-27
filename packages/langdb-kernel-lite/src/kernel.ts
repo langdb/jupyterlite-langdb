@@ -241,7 +241,6 @@ export class LangdbKernel extends BaseKernel {
     storeJson?: { variableName: string }
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     const { code } = content;
-
     try {
       const authResponse = await requestSession();
       if (!authResponse || authResponse.metadata?.readonly) {
@@ -359,7 +358,6 @@ export class LangdbKernel extends BaseKernel {
       if (jsonResponse.exception) {
         throw new Error(jsonResponse.exception);
       }
-
       if (storeJson) {
         // this.variables.set(variableName, jsonResponse.data);
         await this.exportPythonVariables(
@@ -573,6 +571,15 @@ type Metadata = {
   traceId?: string;
   modelName?: string;
 };
+
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
   const data = jsonData.data;
   // Check if the input data is an array and has elements
@@ -603,7 +610,6 @@ const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
     html += '<tr>';
     jsonData.meta.forEach(col => {
       let val = row[col.name];
-
       if (typeof val === 'object') {
         val = JSON.stringify(val)
           .replace(/&/g, '&amp;')
@@ -611,6 +617,10 @@ const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#039;');
+      }
+      if (typeof val === 'string') {
+        // escape html
+        val = `<pre>${escapeHtml(val)}</pre>`;
       }
       html += `<td>${val}</td>`;
     });
