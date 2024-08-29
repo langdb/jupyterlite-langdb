@@ -27,7 +27,10 @@ body[data-jp-theme-light="false"] {
 }
 
 body[data-jp-theme-light="false"] .jp-WindowedPanel-outer {
-    background-color: #171717 !important;
+    background-color: transparent  !important;
+}
+body[data-jp-theme-light="true"] .jp-WindowedPanel-outer {
+    background-color: rgb(243, 244, 246) !important;
 }
 
 body[data-jp-theme-light="false"] .jp-NotebookPanel-notebook {

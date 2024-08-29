@@ -1,11 +1,11 @@
-
-
 #menu-panel-wrapper {
     display: none;
 }
+
 #jp-title {
     display: none;
 }
+
 .lm-Widget.jp-CommandToolbarButton.jp-nb-interface-switcher-button.jp-Toolbar-item {
     display: none;
 }
@@ -14,6 +14,80 @@
     top: 82px !important;
 }
 
-.jp-WindowedPanel-outer {
-    background-color: rgb(243,244,246) !important;
+/* Custom CSS for JupyterLab Dark Theme using data-jp-theme-light attribute */
+body[data-jp-theme-light="false"] {
+    --jp-layout-color0: #2e2e2e !important;
+    /* Set the layout background color */
+    --jp-layout-color1: #3c3c3c !important;
+    /* Slightly lighter grey for other layout elements */
+    --jp-layout-color2: #555555 !important;
+    /* Borders and separators */
+    --jp-ui-font-color0: #d3d3d3 !important;
+    /* Light grey text color */
+}
+
+body[data-jp-theme-light="false"] .jp-WindowedPanel-outer {
+    background-color: transparent !important;
+}
+
+body[data-jp-theme-light="true"] .jp-WindowedPanel-outer {
+    background-color: rgb(243, 244, 246) !important;
+}
+
+body[data-jp-theme-light="false"] .jp-NotebookPanel-notebook {
+    background-color: #2e2e2e !important;
+    /* Dark grey background for notebook */
+    color: #d3d3d3 !important;
+    /* Light grey text color */
+}
+
+body[data-jp-theme-light="false"] .jp-Notebook .jp-InputArea-editor {
+    background-color: #3c3c3c !important;
+    /* Slightly lighter grey for input areas */
+    color: #d3d3d3 !important;
+    /* Light grey text in input areas */
+}
+
+body[data-jp-theme-light="false"] .jp-Notebook .jp-OutputArea-output pre {
+    background-color: #2e2e2e !important;
+    /* Match background for output areas */
+    color: #d3d3d3 !important;
+    /* Light grey text in output areas */
+}
+
+body[data-jp-theme-light="false"] .jp-Notebook .jp-CellPrompt {
+    color: #888888 !important;
+    /* Muted color for cell prompts (In[ ]:) */
+}
+
+body[data-jp-theme-light="false"] .jp-FileBrowser {
+    background-color: #2e2e2e !important;
+    /* Dark grey background for file browser */
+    color: #d3d3d3 !important;
+    /* Light grey text for file browser */
+}
+
+body[data-jp-theme-light="false"] .jp-DirListing-item[data-isdir="false"] {
+    color: #d3d3d3 !important;
+    /* Light grey text for non-directory items */
+}
+
+body[data-jp-theme-light="false"] .jp-DirListing-item[data-isdir="true"] {
+    color: #a3a3a3 !important;
+    /* Slightly muted grey for directory items */
+}
+
+body[data-jp-theme-light="false"] .jp-ToolbarButtonComponent {
+    background-color: #3c3c3c !important;
+    /* Slightly lighter grey for toolbar buttons */
+    color: #d3d3d3 !important;
+    /* Light grey text on toolbar buttons */
+}
+
+/* Optional: Customize the sidebar */
+body[data-jp-theme-light="false"] .jp-SideBar {
+    background-color: #3c3c3c !important;
+    /* Slightly lighter grey for the sidebar */
+    color: #d3d3d3 !important;
+    /* Light grey text for the sidebar */
 }
