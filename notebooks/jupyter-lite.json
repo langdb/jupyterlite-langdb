@@ -15,11 +15,12 @@
     ],
     "disabledExtensions": [
       "@jupyterlab/application-extension:logo",
-      "@jupyter-notebook/notebook-extension:checkpoints",
       "@jupyter-notebook/application-extension:logo",
       "@jupyterlite/application-extension:logo",
       "@jupyterlite/notebook-application-extension:logo",
-      "@jupyterlab/notebook-extension:trust-status"
+      "@jupyterlab/notebook-extension:trust-status",
+      "jupyterlab-tour:default-tours",
+      "jupyterlab-tour:user-tours"
     ],
     "faviconUrl": "./lab/favicon.ico"
   },

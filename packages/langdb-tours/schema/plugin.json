@@ -1,0 +1,14 @@
+{
+  "description": "langdb-tours settings.",
+  "jupyter.lab.shortcuts": [],
+  "properties": {
+    "token": {
+      "type": "string",
+      "default": "",
+      "description": "The token to use for authentication."
+    }
+  },
+  "additionalProperties": true,
+  "title": "langdb-tours",
+  "type": "object"
+}
