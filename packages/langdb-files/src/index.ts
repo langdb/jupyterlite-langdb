@@ -12,9 +12,14 @@ import {
 } from '@jupyterlab/codemirror';
 import { remoteUserCursors } from '@jupyter/collaboration';
 import { themeChangerPlugin } from './theme';
+import { tourPlugin } from './tour';
+import jupyterLabPlugins from 'jupyterlab-tour';
 /**
  * Initialization data for the langdb-files extension.
  */
+const excludeDefaultsPlugin = jupyterLabPlugins.filter(
+  p => p.id !== 'jupyterlab-tour:default-tours'
+);
 export type AuthResponse = {
   token: string;
   apiUrl: string;
@@ -25,14 +30,11 @@ const ldrive: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [IDocumentManager, ISettingRegistry],
   activate: (app: JupyterFrontEnd, manager: IDocumentManager) => {
-    console.log('JupyterLab extension langdb-files is activated!');
-
     const { serviceManager } = app;
     manager.autosave = true;
     const drive = new LangdbDrive(app.docRegistry);
     manager.services.contents.addDrive(drive);
     serviceManager.contents.addDrive(drive);
-    console.log('Drive "ldrive" attached');
     window.parent.postMessage({ type: 'JupyterReady' }, '*');
   }
 };
@@ -43,7 +45,8 @@ const sdrive: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [IDocumentManager, ISettingRegistry],
   activate: (app: JupyterFrontEnd, manager: IDocumentManager) => {
-    console.log('JupyterLab extension langdb-files is activated!');
+    console.log('==== JupyterLab extension langdb-files is activated!');
+    console.log('===== excludeDefaultsPlugin', excludeDefaultsPlugin);
 
     const { serviceManager } = app;
 
@@ -81,10 +84,12 @@ const userEditorCursors: JupyterFrontEndPlugin<void> = {
 };
 
 const plugins: JupyterFrontEndPlugin<any>[] = [
+  ...excludeDefaultsPlugin,
   ldrive,
   sdrive,
   userEditorCursors,
-  themeChangerPlugin
+  themeChangerPlugin,
+  tourPlugin
 ];
 
 export default plugins;

@@ -17,7 +17,6 @@ export class RemoteNotebook {
         const fileUrl = metadata?.fileUrl;
         return await this.getSample(fileUrl!);
       }
-
       let notebookUrl = `${apiUrl}/apps/${appId}/file`;
       if (dirty) {
         notebookUrl = `${apiUrl}/apps/${appId}/changes`;

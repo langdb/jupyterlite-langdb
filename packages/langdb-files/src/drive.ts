@@ -167,7 +167,7 @@ export class LangdbDrive implements Contents.IDrive {
       size: result_string.length
     };
 
-    console.log('CONTENTS', contents);
+    console.log('=== CONTENTS', contents);
 
     if (!this.lastModified) {
       this.lastModified = authResponse.metadata.last_modified;
