@@ -572,14 +572,6 @@ type Metadata = {
   modelName?: string;
 };
 
-const escapeHtml = (unsafe: string): string => {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
   const data = jsonData.data;
   // Check if the input data is an array and has elements
@@ -611,18 +603,9 @@ const toHtml = (jsonData: ClickhouseResponse, metadata: Metadata): string => {
     jsonData.meta.forEach(col => {
       let val = row[col.name];
       if (typeof val === 'object') {
-        val = JSON.stringify(val)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+        val = JSON.stringify(val);
       }
-      if (typeof val === 'string') {
-        // escape html
-        val = `<pre>${escapeHtml(val)}</pre>`;
-      }
-      html += `<td>${val}</td>`;
+      html += `<td><pre>${val}</pre></td>`;
     });
     html += '</tr>';
   });
