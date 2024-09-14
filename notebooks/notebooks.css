@@ -54,6 +54,14 @@ body[data-jp-theme-light="false"] .jp-Notebook .jp-OutputArea-output pre {
     /* Light grey text in output areas */
 }
 
+body .jp-Notebook .jp-OutputArea-output td pre {
+    background-color: transparent !important;
+}
+
+body[data-jp-theme-light="false"] .jp-Notebook .jp-OutputArea-output td pre {
+    background-color: transparent !important;
+}
+
 body[data-jp-theme-light="false"] .jp-Notebook .jp-CellPrompt {
     color: #888888 !important;
     /* Muted color for cell prompts (In[ ]:) */
