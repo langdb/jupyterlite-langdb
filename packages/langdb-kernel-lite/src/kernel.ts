@@ -19,6 +19,7 @@ export interface IAuthResponse {
   token?: string;
   appId: string;
   apiUrl: string;
+  projectId: string;
   metadata?: IFileMetadata;
   isAuthenticated: boolean;
 }
@@ -68,6 +69,9 @@ const getHeaders = (auth: IAuthResponse): Headers => {
   headers.set('Content-Type', 'application/json');
 
   headers.set('Authorization', `Bearer ${auth?.token}`);
+  if (auth.projectId) {
+    headers.set('x-project-id', auth.projectId);
+  }
   return headers;
 };
 /**
