@@ -18,9 +18,9 @@ export class RemoteNotebook {
         return await this.getSample(fileUrl!);
       }
 
-      let notebookUrl = `${apiUrl}/apps/${appId}/file`;
+      let notebookUrl = `${apiUrl}${this.authResponse.projectId ? `/projects/${this.authResponse.projectId}` : ''}/apps/${appId}/file`;
       if (dirty) {
-        notebookUrl = `${apiUrl}/apps/${appId}/changes`;
+        notebookUrl = `${apiUrl}${this.authResponse.projectId ? `/projects/${this.authResponse.projectId}` : ''}/apps/${appId}/changes`;
       }
       const response = await fetch(notebookUrl!, {
         method: 'GET',
@@ -50,13 +50,16 @@ export class RemoteNotebook {
       const formData = new FormData();
       formData.append('file', blob, 'file.ipynb');
 
-      const response = await fetch(`${apiUrl}/apps/${appId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-        body: formData
-      });
+      const response = await fetch(
+        `${apiUrl}${this.authResponse.projectId ? `/projects/${this.authResponse.projectId}` : ''}/apps/${appId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Error saving file');
