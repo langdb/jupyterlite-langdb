@@ -10,6 +10,7 @@ export interface IAuthResponse {
   socketUrl: string;
   metadata?: IFileMetadata;
   isAuthenticated: boolean;
+  projectId?: string;
   user?: any;
 }
 export interface IFileMetadata {
