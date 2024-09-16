@@ -6,6 +6,7 @@ import {
   getLines,
   getMessages
 } from '@microsoft/fetch-event-source/lib/cjs/parse';
+import { ModelEvent } from './events';
 
 const LANGDB_API_URL = 'https://api.dev.langdb.ai';
 
@@ -281,7 +282,16 @@ export class LangdbKernel extends BaseKernel {
       const metadata = { traceId, modelName };
       const contentType = response.headers.get('content-type') || '';
       const onmessage = (msg: EventSourceMessage) => {
-        this.stream({ name: 'stdout', text: msg.data });
+        try {
+          const event = JSON.parse(msg.data) as ModelEvent;
+          if (event.event.type === 'llm_content') {
+            this.stream({ name: 'stdout', text: event.event.data.content });
+          } else {
+            console.debug(event);
+          }
+        } catch (_e: any) {
+          this.stream({ name: 'stdout', text: msg.data });
+        }
       };
 
       if (contentType.includes('text/event-stream')) {
