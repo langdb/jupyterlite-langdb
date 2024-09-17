@@ -256,7 +256,6 @@ export class LangdbKernel extends BaseKernel {
           user_expressions: {}
         } as KernelMessage.IExecuteReplyMsg['content'];
       }
-
       const apiUrl = authResponse?.apiUrl || LANGDB_API_URL;
       const queryUrl = `${apiUrl}/query`;
       const response = await fetch(queryUrl, {
@@ -371,6 +370,9 @@ export class LangdbKernel extends BaseKernel {
 
       if (jsonResponse.exception) {
         throw new Error(jsonResponse.exception);
+      }
+      if (jsonResponse.error) {
+        throw new Error(jsonResponse.error);
       }
       if (storeJson) {
         // this.variables.set(variableName, jsonResponse.data);
