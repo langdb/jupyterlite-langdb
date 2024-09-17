@@ -268,8 +268,8 @@ export class LangdbKernel extends BaseKernel {
       if (response.status >= 200 && response.status < 300) {
         status = 'ok';
         if (
-          code.toLowerCase().startsWith('create ') ||
-          code.toLowerCase().startsWith('drop ')
+          code.toLowerCase().includes('create ') ||
+          code.toLowerCase().includes('drop ')
         ) {
           window.parent.postMessage({ type: 'RefreshSidebar' }, '*');
         }
