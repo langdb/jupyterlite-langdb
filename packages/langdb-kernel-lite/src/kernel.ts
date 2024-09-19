@@ -47,7 +47,10 @@ export interface RenderEvent {
   value: string;
 }
 
-function requestRender(render: RenderEvent): Promise<string | null> {
+function requestRender(
+  render: RenderEvent,
+  projectId?: string
+): Promise<string | null> {
   return new Promise((resolve, reject) => {
     const messageHandler = (event: any) => {
       if (event.data.type === 'RenderResponse') {
@@ -56,7 +59,10 @@ function requestRender(render: RenderEvent): Promise<string | null> {
       }
     };
     window.addEventListener('message', messageHandler);
-    window.parent.postMessage({ type: 'RenderRequest', data: render }, '*');
+    window.parent.postMessage(
+      { type: 'RenderRequest', data: { ...render, projectId } },
+      '*'
+    );
 
     setTimeout(() => {
       window.removeEventListener('message', messageHandler);
@@ -332,7 +338,10 @@ export class LangdbKernel extends BaseKernel {
       }
       // Render will be hijacked
       if (jsonResponse.render) {
-        const render = await requestRender(jsonResponse);
+        const render = await requestRender(
+          jsonResponse,
+          authResponse.projectId
+        );
         if (render) {
           this.publishExecuteResult({
             execution_count: this.executionCount,
